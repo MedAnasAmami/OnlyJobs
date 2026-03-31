@@ -1,0 +1,9 @@
+.toast {
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  margin-bottom: 0.5rem;
+}
+
+.toast-container {
+  z-index: 1100;
+}

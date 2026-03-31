@@ -1,0 +1,11 @@
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="toast show {{ getBgClass(toast.type) }} text-white" role="alert">
+      <div class="toast-body d-flex align-items-center">
+        <i class="bi {{ getIconClass(toast.type) }} me-2 fs-5"></i>
+        {{ toast.message }}
+        <button type="button" class="btn-close btn-close-white ms-auto" (click)="remove(toast.id)"></button>
+      </div>
+    </div>
+  }
+</div>

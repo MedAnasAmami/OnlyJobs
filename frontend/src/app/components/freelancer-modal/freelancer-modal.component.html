@@ -1,0 +1,63 @@
+<div class="modal fade" id="freelancerModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          @if (freelancer()) {
+            {{ freelancer()?.nom }}
+          } @else {
+            Details du Freelancer
+          }
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        @if (loading()) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Chargement...</span>
+            </div>
+          </div>
+        } @else if (freelancer(); as f) {
+          <div class="freelancer-detail-header">
+            @if (f.profil?.photo) {
+              <img [src]="f.profil.photo" [alt]="f.nom" class="rounded">
+            }
+            <div class="freelancer-detail-info flex-grow-1">
+              <h3>{{ f.nom }}</h3>
+              <p><i class="bi bi-envelope me-2"></i>{{ f.email }}</p>
+              <p><i class="bi bi-telephone me-2"></i>{{ f.telephone }}</p>
+              <span class="badge" [ngClass]="f.status === 'actif' ? 'bg-success' : 'bg-secondary'">
+                {{ f.status }}
+              </span>
+            </div>
+          </div>
+
+          @if (f.profil) {
+            <hr>
+            <h5 class="mb-3"><i class="bi bi-file-text me-2"></i>Description</h5>
+            <p class="text-muted mb-4">{{ f.profil.description || 'Pas de description disponible.' }}</p>
+
+            <h5 class="mb-3"><i class="bi bi-tools me-2"></i>Competences</h5>
+            <div class="mb-4">
+              @for (comp of competences; track comp) {
+                <span class="badge bg-primary me-1 mb-1">{{ comp }}</span>
+              }
+              @empty {
+                <span class="text-muted">Aucune competence renseignee</span>
+              }
+            </div>
+
+            <h5 class="mb-3"><i class="bi bi-briefcase me-2"></i>Experience</h5>
+            <p class="text-muted">{{ f.profil.experience || 'Pas d\'experience renseignee.' }}</p>
+          } @else {
+            <div class="alert alert-info mt-4">
+              <i class="bi bi-info-circle me-2"></i>
+              Ce freelancer n'a pas encore complete son profil.
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</div>

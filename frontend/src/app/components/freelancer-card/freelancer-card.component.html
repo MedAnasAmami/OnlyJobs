@@ -1,0 +1,22 @@
+<div class="col-lg-4 col-md-6">
+  <div class="card freelancer-card fade-in-up" [style.animation-delay]="index() * 0.1 + 's'">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h5 class="card-title mb-0">Freelancer #{{ freelancer().id }}</h5>
+        <span class="badge" [ngClass]="freelancer().status === 'actif' ? 'bg-success' : 'bg-secondary'">
+          {{ freelancer().status }}
+        </span>
+      </div>
+
+      <p class="card-text text-muted">
+        Cliquez pour voir le profil complet
+      </p>
+
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-sm btn-outline-primary" (click)="onViewDetail()">
+          <i class="bi bi-eye me-1"></i> Voir profil
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

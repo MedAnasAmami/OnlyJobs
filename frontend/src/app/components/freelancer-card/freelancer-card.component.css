@@ -1,0 +1,109 @@
+.freelancer-card {
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+.freelancer-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.freelancer-card .card-img-top {
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 4px solid #0d6efd;
+}
+
+.freelancer-card .card-body {
+  padding: 1.5rem;
+}
+
+.freelancer-card .card-title {
+  font-weight: 700;
+  color: #212529;
+  margin-bottom: 0.5rem;
+}
+
+.freelancer-card .card-text {
+  font-size: 0.95rem;
+  color: #555;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rating-stars {
+  color: #ffc107;
+  font-size: 1rem;
+}
+
+.rating-stars .bi-star-fill {
+  color: #ffc107;
+}
+
+.rating-stars .bi-star {
+  color: #ddd;
+}
+
+.rating-stars .bi-star-half {
+  color: #ffc107;
+}
+
+.badge-disponible {
+  background-color: #198754;
+}
+
+.badge-indisponible {
+  background-color: #dc3545;
+}
+
+.badge-competence {
+  background-color: #0d6efd;
+  margin: 2px;
+  font-weight: normal;
+}
+
+.tarif-badge {
+  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 25px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.btn-rating {
+  background: #ffc107;
+  color: #212529;
+  border: none;
+}
+
+.btn-rating:hover {
+  background: #e0a800;
+  color: #212529;
+}
+
+.btn-rating:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}

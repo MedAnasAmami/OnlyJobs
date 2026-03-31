@@ -1,0 +1,34 @@
+<section class="bg-light py-3">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-4 mb-2 mb-md-0">
+        <select class="form-select" [(ngModel)]="disponible" (change)="onFilterChange()">
+          <option value="">Tous les statuts</option>
+          <option value="true">Disponibles uniquement</option>
+          <option value="false">Non disponibles</option>
+        </select>
+      </div>
+      <div class="col-md-3 mb-2 mb-md-0">
+        <input
+          type="number"
+          class="form-control"
+          placeholder="Tarif min (EUR/h)"
+          [(ngModel)]="minTarif"
+          (change)="onFilterChange()">
+      </div>
+      <div class="col-md-3 mb-2 mb-md-0">
+        <input
+          type="number"
+          class="form-control"
+          placeholder="Tarif max (EUR/h)"
+          [(ngModel)]="maxTarif"
+          (change)="onFilterChange()">
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-outline-secondary w-100" (click)="onReset()">
+          <i class="bi bi-x-circle me-1"></i>Reset
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

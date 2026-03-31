@@ -1,0 +1,36 @@
+<app-navbar
+  (sectionChanged)="onSectionChanged($event)"
+  (openLogin)="openLoginModal()"
+  (openRegister)="openRegisterModal()">
+</app-navbar>
+
+@if (currentSection() === 'freelancers') {
+  <app-hero></app-hero>
+
+  <main class="container my-5">
+    <app-freelancer-list
+      [freelancers]="freelancers()"
+      [loading]="loading()"
+      (viewDetail)="onViewDetail($event)">
+    </app-freelancer-list>
+  </main>
+} @else if (currentSection() === 'annonces') {
+  <main class="container my-5">
+    <app-annonce-list [annonces]="annonces()"></app-annonce-list>
+  </main>
+} @else if (currentSection() === 'stats') {
+  <main class="container my-5">
+    <app-stats></app-stats>
+  </main>
+}
+
+<app-footer></app-footer>
+
+<!-- Modals -->
+<app-freelancer-modal [freelancerId]="selectedFreelancerId()"></app-freelancer-modal>
+
+<app-login-modal (loginSuccess)="onLoginSuccess()"></app-login-modal>
+<app-register-modal (openLogin)="openLoginModal()"></app-register-modal>
+
+<!-- Toast notifications -->
+<app-toast></app-toast>

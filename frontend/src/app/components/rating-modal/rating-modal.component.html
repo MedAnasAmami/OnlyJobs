@@ -1,0 +1,52 @@
+<div class="modal fade" id="ratingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-star-fill me-2"></i>Donner une Note
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3 text-center">
+          <label class="form-label fw-bold">Votre Note</label>
+          <div class="star-rating">
+            @for (star of stars; track star) {
+              <i
+                class="bi fs-2 star"
+                [class.bi-star-fill]="isStarActive(star)"
+                [class.bi-star]="!isStarActive(star)"
+                [class.active]="isStarActive(star)"
+                (click)="selectRating(star)"
+                (mouseenter)="hoverRating(star)"
+                (mouseleave)="leaveHover()">
+              </i>
+            }
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Commentaire</label>
+          <textarea
+            class="form-control"
+            rows="3"
+            placeholder="Decrivez votre experience..."
+            [(ngModel)]="comment">
+          </textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-warning"
+          (click)="submitRating()"
+          [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          <i class="bi bi-send me-1"></i>Envoyer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
