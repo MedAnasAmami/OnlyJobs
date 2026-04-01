@@ -8,11 +8,35 @@
         </span>
       </div>
 
+      <!-- Rating Display -->
+      <div class="rating-display mb-2">
+        <span class="rating-stars">
+          @for (star of stars; track star) {
+            <i class="bi" [ngClass]="getStarClass(star)"></i>
+          }
+        </span>
+        <span class="rating-count text-muted ms-2">
+          ({{ averageRating().count }} avis)
+        </span>
+      </div>
+
       <p class="card-text text-muted">
         Cliquez pour voir le profil complet
       </p>
 
-      <div class="d-flex justify-content-end">
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="action-buttons">
+          @if (authService.isClient()) {
+            <button class="btn btn-sm btn-warning me-1" (click)="onRate()" title="Noter">
+              <i class="bi bi-star"></i>
+            </button>
+          }
+          @if (authService.isLoggedIn()) {
+            <button class="btn btn-sm btn-outline-danger me-1" (click)="onReport()" title="Signaler">
+              <i class="bi bi-flag"></i>
+            </button>
+          }
+        </div>
         <button class="btn btn-sm btn-outline-primary" (click)="onViewDetail()">
           <i class="bi bi-eye me-1"></i> Voir profil
         </button>

@@ -1,0 +1,49 @@
+<div class="modal fade" id="reportModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-flag-fill me-2"></i>Signaler ce Freelancer
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Raison du signalement *</label>
+          <select class="form-select" [(ngModel)]="selectedReason">
+            <option value="">Selectionnez une raison...</option>
+            @for (reason of reasons; track reason.value) {
+              <option [value]="reason.value">{{ reason.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Description (optionnel)</label>
+          <textarea
+            class="form-control"
+            rows="4"
+            placeholder="Decrivez le probleme en detail..."
+            [(ngModel)]="description">
+          </textarea>
+        </div>
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          Votre signalement sera examine par notre equipe. Les faux signalements peuvent entrainer des sanctions.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          (click)="submitReport()"
+          [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          <i class="bi bi-send me-1"></i>Envoyer le signalement
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

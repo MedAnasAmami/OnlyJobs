@@ -1,10 +1,10 @@
 // Correspond à la table profil
 export interface Profil {
   idProfil?: number;
-  photo: string;
-  description: string;
-  competences: string;
-  experience: string;
+  photo?: string;
+  description?: string;
+  competences?: string;
+  experience?: string;
   freelancer_id: number;
 }
 

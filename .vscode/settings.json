@@ -1,0 +1,17 @@
+{
+  "python.terminal.activateEnvInCurrentTerminal": false,
+  "python.terminal.executeInFileDir": false,
+  "python.linting.enabled": false,
+  "python.terminal.pythonPath": "",
+  "python.defaultInterpreterPath": "",
+  "python.venvPath": "",
+  "terminal.integrated.env.linux": {},
+  "extensions.ignoreRecommendations": false,
+  "[python]": {
+    "python.terminal.activateEnvInCurrentTerminal": false
+  },
+  "python.formatting.provider": "none",
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": false,
+  "python.linting.mypyEnabled": false
+}

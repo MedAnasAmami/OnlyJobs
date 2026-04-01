@@ -1,5 +1,6 @@
 <app-navbar
   (sectionChanged)="onSectionChanged($event)"
+  (searchChanged)="onSearchChanged($event)"
   (openLogin)="openLoginModal()"
   (openRegister)="openRegisterModal()">
 </app-navbar>
@@ -8,15 +9,37 @@
   <app-hero></app-hero>
 
   <main class="container my-5">
+    <!-- Search results info -->
+    @if (searchQuery()) {
+      <div class="alert alert-info mb-4">
+        <i class="bi bi-search me-2"></i>
+        Resultats pour "{{ searchQuery() }}" : {{ filteredFreelancers().length }} freelancer(s) trouve(s)
+        @if (filteredFreelancers().length === 0) {
+          <p class="mb-0 mt-2">Essayez avec d'autres termes de recherche.</p>
+        }
+      </div>
+    }
+
     <app-freelancer-list
-      [freelancers]="freelancers()"
+      [freelancers]="filteredFreelancers()"
       [loading]="loading()"
       (viewDetail)="onViewDetail($event)">
     </app-freelancer-list>
   </main>
 } @else if (currentSection() === 'annonces') {
   <main class="container my-5">
-    <app-annonce-list [annonces]="annonces()"></app-annonce-list>
+    <!-- Search results info for annonces -->
+    @if (searchQuery()) {
+      <div class="alert alert-info mb-4">
+        <i class="bi bi-search me-2"></i>
+        Resultats pour "{{ searchQuery() }}" : {{ filteredAnnonces().length }} annonce(s) trouvee(s)
+      </div>
+    }
+
+    <app-annonce-list
+      [annonces]="filteredAnnonces()"
+      (annonceUpdated)="loadAnnonces()">
+    </app-annonce-list>
   </main>
 } @else if (currentSection() === 'stats') {
   <main class="container my-5">

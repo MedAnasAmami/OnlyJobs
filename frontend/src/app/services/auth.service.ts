@@ -63,7 +63,12 @@ export class AuthService {
   }
 
   register(data: RegisterRequest): Observable<UtilisateurResponse> {
-    return this.http.post<UtilisateurResponse>(`${this.apiUrl}/register`, data);
+    return this.http.post<UtilisateurResponse>(`${this.apiUrl}/register`, data).pipe(
+      tap(user => {
+        this.currentUser.set(user);
+        localStorage.setItem(this.storageKey, JSON.stringify(user));
+      })
+    );
   }
 
   logout(): void {

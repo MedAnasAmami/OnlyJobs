@@ -21,7 +21,7 @@
         } @else if (freelancer(); as f) {
           <div class="freelancer-detail-header">
             @if (f.profil?.photo) {
-              <img [src]="f.profil.photo" [alt]="f.nom" class="rounded">
+              <img [src]="f.profil?.photo" [alt]="f.nom" class="rounded">
             }
             <div class="freelancer-detail-info flex-grow-1">
               <h3>{{ f.nom }}</h3>

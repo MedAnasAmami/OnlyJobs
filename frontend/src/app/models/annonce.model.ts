@@ -3,6 +3,7 @@ export interface Annonce {
   idAnnonce?: number;
   titre: string;
   description: string;
+  image?: string;
   dateCreation: string;
   freelancer_id: number;
 }
@@ -10,6 +11,7 @@ export interface Annonce {
 export interface AnnonceCreate {
   titre: string;
   description: string;
+  image?: string;
   dateCreation: string;
   freelancer_id: number;
 }
@@ -17,5 +19,6 @@ export interface AnnonceCreate {
 export interface AnnonceUpdate {
   titre?: string;
   description?: string;
+  image?: string;
   dateCreation?: string;
 }

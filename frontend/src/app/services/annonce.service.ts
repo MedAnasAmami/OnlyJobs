@@ -4,6 +4,11 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Annonce, AnnonceCreate, AnnonceUpdate } from '../models/annonce.model';
 
+export interface UploadResponse {
+  url: string;
+  filename: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -40,5 +45,19 @@ export class AnnonceService {
   // Supprimer une annonce
   deleteAnnonce(id: number): Observable<{message: string}> {
     return this.http.delete<{message: string}>(`${this.apiUrl}/annonces/${id}`);
+  }
+
+  // Uploader une image
+  uploadImage(file: File): Observable<UploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<UploadResponse>(`${this.apiUrl}/upload`, formData);
+  }
+
+  // Construire l'URL complete de l'image
+  getImageUrl(imagePath: string | undefined): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${this.apiUrl}${imagePath}`;
   }
 }

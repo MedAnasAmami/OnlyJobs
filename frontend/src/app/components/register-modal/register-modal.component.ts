@@ -64,14 +64,13 @@ export class RegisterModalComponent {
         role: this.role()
       }).toPromise();
 
-      this.success.set('Inscription reussie! Vous pouvez maintenant vous connecter.');
+      if (this.modal) {
+        this.modal.hide();
+      }
 
-      setTimeout(() => {
-        if (this.modal) {
-          this.modal.hide();
-        }
-        this.openLogin.emit();
-      }, 2000);
+      const user = this.authService.currentUser();
+      this.toastService.success(`Bienvenue ${user?.nom}! Inscription reussie.`);
+      this.openLogin.emit();
     } catch (err: any) {
       const message = err?.error?.detail || 'Erreur d\'inscription';
       this.error.set(message);

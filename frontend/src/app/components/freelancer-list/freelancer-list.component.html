@@ -24,9 +24,23 @@
         <app-freelancer-card
           [freelancer]="freelancer"
           [index]="$index"
-          (viewDetail)="onViewDetail($event)">
+          (viewDetail)="onViewDetail($event)"
+          (rateFreelancer)="onRateFreelancer($event)"
+          (reportFreelancer)="onReportFreelancer($event)">
         </app-freelancer-card>
       }
     }
   </div>
 </section>
+
+<!-- Rating Modal -->
+<app-rating-modal
+  [freelancerId]="selectedFreelancerForRating()"
+  (ratingSubmitted)="onRatingSubmitted()">
+</app-rating-modal>
+
+<!-- Report Modal -->
+<app-report-modal
+  [freelancerId]="selectedFreelancerForReport()"
+  (reportSubmitted)="onReportSubmitted()">
+</app-report-modal>

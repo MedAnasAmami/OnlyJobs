@@ -1,80 +1,132 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Hôte : 127.0.0.1
--- Généré le : mar. 31 mars 2026 à 19:16
--- Version du serveur : 10.4.32-MariaDB
--- Version de PHP : 8.0.30
+-- OnlyJobs Database Schema
+-- This file can be run multiple times safely
+
+CREATE DATABASE IF NOT EXISTS onlyjobs;
+USE onlyjobs;
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT;
+SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS;
+SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION;
+SET NAMES utf8mb4;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Base de données : `onlyjobs`
---
+-- Drop tables in reverse order (respect foreign key constraints)
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `report`;
+DROP TABLE IF EXISTS `rating`;
+DROP TABLE IF EXISTS `profil`;
+DROP TABLE IF EXISTS `annonce`;
+DROP TABLE IF EXISTS `authentification`;
+DROP TABLE IF EXISTS `freelancer`;
+DROP TABLE IF EXISTS `client`;
+DROP TABLE IF EXISTS `admin`;
+DROP TABLE IF EXISTS `utilisateur`;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- --------------------------------------------------------
-
---
--- Structure de la table `admin`
---
-
-CREATE TABLE `admin` (
-  `id` int(11) NOT NULL
+-- Table `utilisateur`
+-- --------------------------------------------------------
+CREATE TABLE `utilisateur` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nom` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `motDePasse` varchar(255) NOT NULL,
+  `telephone` varchar(25) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Déchargement des données de la table `admin`
---
-
-INSERT INTO `admin` (`id`) VALUES
-(3);
+INSERT INTO `utilisateur` (`id`, `nom`, `email`, `motDePasse`, `telephone`) VALUES
+(1, 'Ali Ben Salah', 'ali@gmail.com', '123456', '20123456'),
+(2, 'Sami Trabelsi', 'sami@gmail.com', '123456', '22123456'),
+(3, 'Admin User', 'admin@gmail.com', 'admin123', '99123456'),
+(4, 'Client User', 'client@gmail.com', 'client123', '55123456');
 
 -- --------------------------------------------------------
+-- Table `admin`
+-- --------------------------------------------------------
+CREATE TABLE `admin` (
+  `id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `admin_ibfk_1` FOREIGN KEY (`id`) REFERENCES `utilisateur` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Structure de la table `annonce`
---
+INSERT INTO `admin` (`id`) VALUES (3);
 
+-- --------------------------------------------------------
+-- Table `client`
+-- --------------------------------------------------------
+CREATE TABLE `client` (
+  `id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `client_ibfk_1` FOREIGN KEY (`id`) REFERENCES `utilisateur` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `client` (`id`) VALUES (4);
+
+-- --------------------------------------------------------
+-- Table `freelancer`
+-- --------------------------------------------------------
+CREATE TABLE `freelancer` (
+  `id` int(11) NOT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `freelancer_ibfk_1` FOREIGN KEY (`id`) REFERENCES `utilisateur` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `freelancer` (`id`, `status`) VALUES
+(1, 'Disponible'),
+(2, 'Occupe');
+
+-- --------------------------------------------------------
+-- Table `profil`
+-- --------------------------------------------------------
+CREATE TABLE `profil` (
+  `idProfil` int(11) NOT NULL AUTO_INCREMENT,
+  `photo` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `competences` text DEFAULT NULL,
+  `experience` text DEFAULT NULL,
+  `freelancer_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idProfil`),
+  UNIQUE KEY `freelancer_id` (`freelancer_id`),
+  CONSTRAINT `profil_ibfk_1` FOREIGN KEY (`freelancer_id`) REFERENCES `freelancer` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `profil` (`idProfil`, `photo`, `description`, `competences`, `experience`, `freelancer_id`) VALUES
+(1, 'photo1.jpg', 'Developpeur web', 'HTML, CSS, JS', '2 ans', 1),
+(2, 'photo2.jpg', 'Designer graphique', 'Photoshop, Illustrator', '3 ans', 2);
+
+-- --------------------------------------------------------
+-- Table `annonce`
+-- --------------------------------------------------------
 CREATE TABLE `annonce` (
-  `idAnnonce` int(11) NOT NULL,
+  `idAnnonce` int(11) NOT NULL AUTO_INCREMENT,
   `titre` varchar(255) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `dateCreation` date DEFAULT NULL,
-  `freelancer_id` int(11) DEFAULT NULL
+  `freelancer_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idAnnonce`),
+  KEY `freelancer_id` (`freelancer_id`),
+  CONSTRAINT `annonce_ibfk_1` FOREIGN KEY (`freelancer_id`) REFERENCES `freelancer` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `annonce`
---
 
 INSERT INTO `annonce` (`idAnnonce`, `titre`, `description`, `dateCreation`, `freelancer_id`) VALUES
-(1, 'Création site web', 'Je propose la création de sites modernes', '2026-03-30', 1),
+(1, 'Creation site web', 'Je propose la creation de sites modernes', '2026-03-30', 1),
 (2, 'Logo professionnel', 'Conception de logos uniques', '2026-03-30', 2),
-(3, 'Application mobile', 'Développement Android/iOS', '2026-03-30', 1);
+(3, 'Application mobile', 'Developpement Android/iOS', '2026-03-30', 1);
 
 -- --------------------------------------------------------
-
---
--- Structure de la table `authentification`
---
-
+-- Table `authentification`
+-- --------------------------------------------------------
 CREATE TABLE `authentification` (
-  `id` int(11) NOT NULL,
-  `utilisateur_id` int(11) DEFAULT NULL
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `utilisateur_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `utilisateur_id` (`utilisateur_id`),
+  CONSTRAINT `authentification_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateur` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `authentification`
---
 
 INSERT INTO `authentification` (`id`, `utilisateur_id`) VALUES
 (1, 1),
@@ -83,207 +135,42 @@ INSERT INTO `authentification` (`id`, `utilisateur_id`) VALUES
 (4, 4);
 
 -- --------------------------------------------------------
-
---
--- Structure de la table `client`
---
-
-CREATE TABLE `client` (
-  `id` int(11) NOT NULL
+-- Table `rating`
+-- --------------------------------------------------------
+CREATE TABLE `rating` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `note` int(11) NOT NULL CHECK (`note` >= 1 AND `note` <= 5),
+  `commentaire` varchar(500) DEFAULT NULL,
+  `date_creation` datetime DEFAULT NULL,
+  `freelancer_id` int(11) NOT NULL,
+  `client_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `freelancer_id` (`freelancer_id`),
+  KEY `client_id` (`client_id`),
+  CONSTRAINT `rating_ibfk_1` FOREIGN KEY (`freelancer_id`) REFERENCES `freelancer` (`id`),
+  CONSTRAINT `rating_ibfk_2` FOREIGN KEY (`client_id`) REFERENCES `client` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `client`
---
-
-INSERT INTO `client` (`id`) VALUES
-(4);
 
 -- --------------------------------------------------------
-
---
--- Structure de la table `freelancer`
---
-
-CREATE TABLE `freelancer` (
-  `id` int(11) NOT NULL,
-  `status` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `freelancer`
---
-
-INSERT INTO `freelancer` (`id`, `status`) VALUES
-(1, 'Disponible'),
-(2, 'Occupé');
-
+-- Table `report`
 -- --------------------------------------------------------
-
---
--- Structure de la table `profil`
---
-
-CREATE TABLE `profil` (
-  `idProfil` int(11) NOT NULL,
-  `photo` varchar(255) DEFAULT NULL,
-  `description` text DEFAULT NULL,
-  `competences` text DEFAULT NULL,
-  `experience` text DEFAULT NULL,
-  `freelancer_id` int(11) DEFAULT NULL
+CREATE TABLE `report` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `raison` varchar(100) NOT NULL,
+  `description` varchar(500) DEFAULT NULL,
+  `date_creation` datetime DEFAULT NULL,
+  `statut` varchar(50) DEFAULT 'en_attente',
+  `freelancer_id` int(11) NOT NULL,
+  `reporter_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `freelancer_id` (`freelancer_id`),
+  KEY `reporter_id` (`reporter_id`),
+  CONSTRAINT `report_ibfk_1` FOREIGN KEY (`freelancer_id`) REFERENCES `freelancer` (`id`),
+  CONSTRAINT `report_ibfk_2` FOREIGN KEY (`reporter_id`) REFERENCES `utilisateur` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Déchargement des données de la table `profil`
---
-
-INSERT INTO `profil` (`idProfil`, `photo`, `description`, `competences`, `experience`, `freelancer_id`) VALUES
-(1, 'photo1.jpg', 'Développeur web', 'HTML, CSS, JS', '2 ans', 1),
-(2, 'photo2.jpg', 'Designer graphique', 'Photoshop, Illustrator', '3 ans', 2);
-
--- --------------------------------------------------------
-
---
--- Structure de la table `utilisateur`
---
-
-CREATE TABLE `utilisateur` (
-  `id` int(11) NOT NULL,
-  `nom` varchar(25) NOT NULL,
-  `email` varchar(25) NOT NULL,
-  `motDePasse` varchar(25) NOT NULL,
-  `telephone` varchar(25) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `utilisateur`
---
-
-INSERT INTO `utilisateur` (`id`, `nom`, `email`, `motDePasse`, `telephone`) VALUES
-(1, 'Ali Ben Salah', 'ali@gmail.com', '123456', '20123456'),
-(2, 'Sami Trabelsi', 'sami@gmail.com', '123456', '22123456'),
-(3, 'Admin User', 'admin@gmail.com', 'admin123', '99123456'),
-(4, 'Client User', 'client@gmail.com', 'client123', '55123456'),
-(2342, 'ben salah', 'bensalah22@gmail.com', 'salahben234', '26435543');
-
---
--- Index pour les tables déchargées
---
-
---
--- Index pour la table `admin`
---
-ALTER TABLE `admin`
-  ADD PRIMARY KEY (`id`);
-
---
--- Index pour la table `annonce`
---
-ALTER TABLE `annonce`
-  ADD PRIMARY KEY (`idAnnonce`),
-  ADD KEY `freelancer_id` (`freelancer_id`);
-
---
--- Index pour la table `authentification`
---
-ALTER TABLE `authentification`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `utilisateur_id` (`utilisateur_id`);
-
---
--- Index pour la table `client`
---
-ALTER TABLE `client`
-  ADD PRIMARY KEY (`id`);
-
---
--- Index pour la table `freelancer`
---
-ALTER TABLE `freelancer`
-  ADD PRIMARY KEY (`id`);
-
---
--- Index pour la table `profil`
---
-ALTER TABLE `profil`
-  ADD PRIMARY KEY (`idProfil`),
-  ADD UNIQUE KEY `freelancer_id` (`freelancer_id`);
-
---
--- Index pour la table `utilisateur`
---
-ALTER TABLE `utilisateur`
-  ADD PRIMARY KEY (`id`);
-
---
--- AUTO_INCREMENT pour les tables déchargées
---
-
---
--- AUTO_INCREMENT pour la table `annonce`
---
-ALTER TABLE `annonce`
-  MODIFY `idAnnonce` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT pour la table `authentification`
---
-ALTER TABLE `authentification`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT pour la table `profil`
---
-ALTER TABLE `profil`
-  MODIFY `idProfil` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT pour la table `utilisateur`
---
-ALTER TABLE `utilisateur`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2343;
-
---
--- Contraintes pour les tables déchargées
---
-
---
--- Contraintes pour la table `admin`
---
-ALTER TABLE `admin`
-  ADD CONSTRAINT `admin_ibfk_1` FOREIGN KEY (`id`) REFERENCES `utilisateur` (`id`);
-
---
--- Contraintes pour la table `annonce`
---
-ALTER TABLE `annonce`
-  ADD CONSTRAINT `annonce_ibfk_1` FOREIGN KEY (`freelancer_id`) REFERENCES `freelancer` (`id`);
-
---
--- Contraintes pour la table `authentification`
---
-ALTER TABLE `authentification`
-  ADD CONSTRAINT `authentification_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateur` (`id`);
-
---
--- Contraintes pour la table `client`
---
-ALTER TABLE `client`
-  ADD CONSTRAINT `client_ibfk_1` FOREIGN KEY (`id`) REFERENCES `utilisateur` (`id`);
-
---
--- Contraintes pour la table `freelancer`
---
-ALTER TABLE `freelancer`
-  ADD CONSTRAINT `freelancer_ibfk_1` FOREIGN KEY (`id`) REFERENCES `utilisateur` (`id`);
-
---
--- Contraintes pour la table `profil`
---
-ALTER TABLE `profil`
-  ADD CONSTRAINT `profil_ibfk_1` FOREIGN KEY (`freelancer_id`) REFERENCES `freelancer` (`id`);
 COMMIT;
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;
+SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;
+SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION;

@@ -1,17 +1,28 @@
 # main.py - API FastAPI pour OnlyJobs avec SQLModel
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from database import get_session
-from sqlmodel import Session, select
-from models import Utilisateur, Freelancer, Admin, Client, Profil, Annonce, Authentification
+from sqlmodel import Session, select, func
+from models import Utilisateur, Freelancer, Admin, Client, Profil, Annonce, Authentification, Rating, Report
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
+import os
+import uuid
 
 app = FastAPI(
     title="OnlyJobs API",
     description="API pour la plateforme de freelancing OnlyJobs",
     version="2.0.0"
 )
+
+# Configuration du dossier uploads
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Servir les fichiers statiques (images uploadees)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # Configuration CORS
 app.add_middleware(
@@ -43,7 +54,20 @@ class ProfilUpdate(BaseModel):
 class AnnonceUpdate(BaseModel):
     titre: Optional[str] = None
     description: Optional[str] = None
+    image: Optional[str] = None
     dateCreation: Optional[str] = None
+
+class RatingRequest(BaseModel):
+    note: int  # 1-5
+    commentaire: Optional[str] = None
+    freelancer_id: int
+    client_id: int
+
+class ReportRequest(BaseModel):
+    raison: str  # spam, comportement, autre
+    description: Optional[str] = None
+    freelancer_id: int
+    reporter_id: int
 
 # ==================== AUTHENTIFICATION ====================
 
@@ -238,7 +262,6 @@ def read_client_detail(client_id: int, session: Session = Depends(get_session)):
     client = session.get(Client, client_id)
     if not client:
         raise HTTPException(status_code=404, detail="Client non trouve")
-
     user = session.get(Utilisateur, client_id)
     return {
         "id": client.id,
@@ -246,9 +269,7 @@ def read_client_detail(client_id: int, session: Session = Depends(get_session)):
         "email": user.email if user else "",
         "telephone": user.telephone if user else ""
     }
-
 # ==================== ROUTES PROFIL ====================
-
 @app.post("/profils", tags=["Profils"])
 def create_profil(profil: Profil, session: Session = Depends(get_session)):
     session.add(profil)
@@ -333,6 +354,8 @@ def update_annonce(annonce_id: int, new_data: AnnonceUpdate, session: Session = 
         annonce.titre = new_data.titre
     if new_data.description is not None:
         annonce.description = new_data.description
+    if new_data.image is not None:
+        annonce.image = new_data.image
     if new_data.dateCreation is not None:
         annonce.dateCreation = new_data.dateCreation
 
@@ -350,21 +373,222 @@ def delete_annonce(annonce_id: int, session: Session = Depends(get_session)):
     session.commit()
     return {"message": "Annonce supprimee"}
 
+# ==================== UPLOAD ====================
+
+@app.post("/upload", tags=["Upload"])
+async def upload_image(file: UploadFile = File(...)):
+    """Upload une image et retourne l'URL"""
+    # Verifier le type de fichier
+    allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Type de fichier non autorise. Utilisez JPG, PNG, GIF ou WEBP.")
+
+    # Generer un nom unique pour le fichier
+    file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+
+    # Sauvegarder le fichier
+    try:
+        contents = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload: {str(e)}")
+
+    # Retourner l'URL de l'image
+    return {"url": f"/uploads/{unique_filename}", "filename": unique_filename}
+
+# ==================== ROUTES RATING ====================
+
+@app.post("/ratings", tags=["Ratings"])
+def create_rating(data: RatingRequest, session: Session = Depends(get_session)):
+    """Creer une nouvelle evaluation"""
+    # Verifier que le freelancer existe
+    freelancer = session.get(Freelancer, data.freelancer_id)
+    if not freelancer:
+        raise HTTPException(status_code=404, detail="Freelancer non trouve")
+
+    # Verifier que le client existe
+    client = session.get(Client, data.client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client non trouve")
+
+    # Verifier la note (1-5)
+    if data.note < 1 or data.note > 5:
+        raise HTTPException(status_code=400, detail="La note doit etre entre 1 et 5")
+
+    rating = Rating(
+        note=data.note,
+        commentaire=data.commentaire,
+        date_creation=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        freelancer_id=data.freelancer_id,
+        client_id=data.client_id
+    )
+    session.add(rating)
+    session.commit()
+    session.refresh(rating)
+    return rating
+
+@app.get("/ratings", tags=["Ratings"])
+def read_ratings(session: Session = Depends(get_session)):
+    """Obtenir toutes les evaluations"""
+    statement = select(Rating)
+    return session.exec(statement).all()
+
+@app.get("/ratings/{rating_id}", tags=["Ratings"])
+def read_rating(rating_id: int, session: Session = Depends(get_session)):
+    """Obtenir une evaluation par ID"""
+    rating = session.get(Rating, rating_id)
+    if not rating:
+        raise HTTPException(status_code=404, detail="Evaluation non trouvee")
+    return rating
+
+@app.get("/freelancers/{freelancer_id}/ratings", tags=["Ratings"])
+def read_freelancer_ratings(freelancer_id: int, session: Session = Depends(get_session)):
+    """Obtenir toutes les evaluations d'un freelancer"""
+    freelancer = session.get(Freelancer, freelancer_id)
+    if not freelancer:
+        raise HTTPException(status_code=404, detail="Freelancer non trouve")
+
+    ratings = session.exec(select(Rating).where(Rating.freelancer_id == freelancer_id)).all()
+
+    # Ajouter les infos du client pour chaque rating
+    result = []
+    for rating in ratings:
+        user = session.get(Utilisateur, rating.client_id)
+        result.append({
+            "id": rating.id,
+            "note": rating.note,
+            "commentaire": rating.commentaire,
+            "date_creation": rating.date_creation,
+            "freelancer_id": rating.freelancer_id,
+            "client_id": rating.client_id,
+            "client_nom": user.nom if user else "Anonyme"
+        })
+    return result
+
+@app.get("/freelancers/{freelancer_id}/average-rating", tags=["Ratings"])
+def get_freelancer_average_rating(freelancer_id: int, session: Session = Depends(get_session)):
+    """Obtenir la note moyenne d'un freelancer"""
+    freelancer = session.get(Freelancer, freelancer_id)
+    if not freelancer:
+        raise HTTPException(status_code=404, detail="Freelancer non trouve")
+
+    ratings = session.exec(select(Rating).where(Rating.freelancer_id == freelancer_id)).all()
+    if not ratings:
+        return {"average": 0, "count": 0}
+
+    total = sum(r.note for r in ratings)
+    return {"average": round(total / len(ratings), 1), "count": len(ratings)}
+
+@app.delete("/ratings/{rating_id}", tags=["Ratings"])
+def delete_rating(rating_id: int, session: Session = Depends(get_session)):
+    """Supprimer une evaluation"""
+    rating = session.get(Rating, rating_id)
+    if not rating:
+        raise HTTPException(status_code=404, detail="Evaluation non trouvee")
+    session.delete(rating)
+    session.commit()
+    return {"message": "Evaluation supprimee"}
+
+# ==================== ROUTES REPORT ====================
+
+@app.post("/reports", tags=["Reports"])
+def create_report(data: ReportRequest, session: Session = Depends(get_session)):
+    """Creer un nouveau signalement"""
+    # Verifier que le freelancer existe
+    freelancer = session.get(Freelancer, data.freelancer_id)
+    if not freelancer:
+        raise HTTPException(status_code=404, detail="Freelancer non trouve")
+
+    # Verifier que le reporter existe
+    reporter = session.get(Utilisateur, data.reporter_id)
+    if not reporter:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouve")
+
+    # Valider la raison
+    valid_reasons = ["spam", "comportement", "fraude", "contenu_inapproprie", "autre"]
+    if data.raison not in valid_reasons:
+        raise HTTPException(status_code=400, detail=f"Raison invalide. Valeurs acceptees: {', '.join(valid_reasons)}")
+
+    report = Report(
+        raison=data.raison,
+        description=data.description,
+        date_creation=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        statut="en_attente",
+        freelancer_id=data.freelancer_id,
+        reporter_id=data.reporter_id
+    )
+    session.add(report)
+    session.commit()
+    session.refresh(report)
+    return report
+
+@app.get("/reports", tags=["Reports"])
+def read_reports(session: Session = Depends(get_session)):
+    """Obtenir tous les signalements (admin only)"""
+    statement = select(Report)
+    return session.exec(statement).all()
+
+@app.get("/reports/{report_id}", tags=["Reports"])
+def read_report(report_id: int, session: Session = Depends(get_session)):
+    """Obtenir un signalement par ID"""
+    report = session.get(Report, report_id)
+    if not report:
+        raise HTTPException(status_code=404, detail="Signalement non trouve")
+    return report
+
+@app.put("/reports/{report_id}/status", tags=["Reports"])
+def update_report_status(report_id: int, statut: str, session: Session = Depends(get_session)):
+    """Mettre a jour le statut d'un signalement (admin only)"""
+    report = session.get(Report, report_id)
+    if not report:
+        raise HTTPException(status_code=404, detail="Signalement non trouve")
+
+    valid_statuts = ["en_attente", "traite", "rejete"]
+    if statut not in valid_statuts:
+        raise HTTPException(status_code=400, detail=f"Statut invalide. Valeurs acceptees: {', '.join(valid_statuts)}")
+
+    report.statut = statut
+    session.add(report)
+    session.commit()
+    session.refresh(report)
+    return report
+
+@app.get("/freelancers/{freelancer_id}/reports", tags=["Reports"])
+def read_freelancer_reports(freelancer_id: int, session: Session = Depends(get_session)):
+    """Obtenir tous les signalements d'un freelancer"""
+    freelancer = session.get(Freelancer, freelancer_id)
+    if not freelancer:
+        raise HTTPException(status_code=404, detail="Freelancer non trouve")
+
+    reports = session.exec(select(Report).where(Report.freelancer_id == freelancer_id)).all()
+    return reports
+
 # ==================== STATISTIQUES ====================
 
 @app.get("/stats", tags=["Statistiques"])
 def get_stats(session: Session = Depends(get_session)):
     """Obtenir les statistiques de la plateforme"""
-    total_users = len(session.exec(select(Utilisateur)).all())
-    total_freelancers = len(session.exec(select(Freelancer)).all())
-    total_clients = len(session.exec(select(Client)).all())
-    total_annonces = len(session.exec(select(Annonce)).all())
+    total_users = session.query(func.count(Utilisateur.id)).scalar() or 0
+    total_freelancers = session.query(func.count(Freelancer.id)).scalar() or 0
+    total_clients = session.query(func.count(Client.id)).scalar() or 0
+    total_annonces = session.query(func.count(Annonce.idAnnonce)).scalar() or 0
+    total_ratings = session.query(func.count(Rating.id)).scalar() or 0
+    total_reports = session.query(func.count(Report.id)).scalar() or 0
+
+    # Calculer la moyenne generale des notes
+    avg_rating = session.query(func.avg(Rating.note)).scalar() or 0
 
     return {
         "total_utilisateurs": total_users,
         "total_freelancers": total_freelancers,
         "total_clients": total_clients,
-        "total_annonces": total_annonces
+        "total_annonces": total_annonces,
+        "total_ratings": total_ratings,
+        "total_reports": total_reports,
+        "moyenne_generale": round(float(avg_rating), 1) if avg_rating else 0
     }
 
 # ==================== ROUTE RACINE ====================

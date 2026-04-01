@@ -3,9 +3,11 @@
 Plateforme de mise en relation clients/freelancers avec:
 - authentification client (inscription/connexion)
 - consultation des freelancers
-- filtres (disponibilite, tarif)
-- notation/commentaires
+- systeme de notation (1-5 etoiles)
+- signalement des profils
 - statistiques globales
+
+**Guide Windows:** Consultez [readmeWindows.md](./readmeWindows.md)
 
 ## 1. Stack technique
 
@@ -47,8 +49,6 @@ project/
         src/
 ```
 
-## 4. Installation et lancement
-
 Important: ouvre 2 terminaux (un pour backend, un pour frontend).
 
 ### Etape A - Initialiser MySQL
@@ -56,22 +56,21 @@ Important: ouvre 2 terminaux (un pour backend, un pour frontend).
 1. Connecte-toi a MySQL:
 
 ```bash
-mysql -u root -p
+mysql -u root onlyjobs
 ```
 
 2. Execute le script SQL (depuis le prompt mysql):
 
 ```sql
-SOURCE /chemin/absolu/vers/project/backend/database.sql;
+SOURCE /chemin/absolu/vers/project/backend/onlyjobs.sql;
 ```
-
 Exemple:
 
 ```sql
-SOURCE /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/project/backend/database.sql;
+SOURCE /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/project/backend/onlyjobs.sql;
 ```
 
-Ce script cree la base `projetweb`, les tables et des donnees de test.
+Ce script cree la base `onlyjobs`, les tables et des donnees de test.
 
 ### Etape B - Lancer le backend (FastAPI)
 
@@ -88,10 +87,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # Necessaire car backend/database.py utilise mysql.connector
-pip install mysql-connector-python
-
+python -m pip install fastapi uvicorn sqlmodel mysql-connector-python
+python -m pip install pymysql
 # Lancer l'API
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Backend disponible sur:
@@ -115,35 +114,38 @@ Le frontend est deja configure pour appeler l'API sur `http://localhost:8000/api
 
 ## 5. Comptes de test
 
-Tu peux te connecter avec les clients precharges:
-
-- `jean.dupont@email.com` / `password123`
-- `marie.martin@email.com` / `password123`
-- `pierre.bernard@email.com` / `password123`
+| Role       | Email              | Mot de passe |
+|------------|-------------------|--------------|
+| Freelancer | ali@gmail.com     | 123456       |
+| Freelancer | sami@gmail.com    | 123456       |
+| Admin      | admin@gmail.com   | admin123     |
+| Client     | client@gmail.com  | client123    |
 
 ## 6. Endpoints principaux
 
-### Clients
-- `POST /api/clients`
-- `POST /api/clients/login`
-- `GET /api/clients`
-- `GET /api/clients/{client_id}`
+### Authentification
+- `POST /login` - Connexion
+- `POST /register` - Inscription
 
 ### Freelancers
-- `GET /api/freelancers`
-- `GET /api/freelancers/{freelancer_id}`
-- `POST /api/freelancers`
-- `PUT /api/freelancers/{freelancer_id}`
-- `DELETE /api/freelancers/{freelancer_id}`
+- `GET /freelancers` - Liste des freelancers
+- `GET /freelancers/{id}` - Detail d'un freelancer
+- `GET /freelancers/{id}/detail` - Detail complet avec profil
+- `GET /freelancers/{id}/ratings` - Notations d'un freelancer
+- `GET /freelancers/{id}/average-rating` - Note moyenne
 
-### Ratings
-- `GET /api/ratings`
-- `GET /api/freelancers/{freelancer_id}/ratings`
-- `POST /api/ratings`
-- `DELETE /api/ratings/{rating_id}`
+### Ratings (Notations)
+- `GET /ratings` - Liste des notations
+- `POST /ratings` - Creer une notation
+- `DELETE /ratings/{id}` - Supprimer une notation
+
+### Reports (Signalements)
+- `GET /reports` - Liste des signalements
+- `POST /reports` - Creer un signalement
+- `PUT /reports/{id}/status` - Mettre a jour le statut
 
 ### Stats
-- `GET /api/stats`
+- `GET /stats` - Statistiques de la plateforme
 
 ## 7. Probleme frequents et solutions
 

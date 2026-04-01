@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild } from '@angular/core';
+import { Component, signal, ViewChild, computed } from '@angular/core';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { HeroComponent } from './components/hero/hero.component';
 import { FreelancerListComponent } from './components/freelancer-list/freelancer-list.component';
@@ -40,8 +40,39 @@ export class App {
   freelancers = signal<Freelancer[]>([]);
   annonces = signal<Annonce[]>([]);
   loading = signal(true);
+  searchQuery = signal('');
 
   selectedFreelancerId = signal<number | null>(null);
+
+  // Filtered freelancers based on search query
+  filteredFreelancers = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const allFreelancers = this.freelancers();
+
+    if (!query) {
+      return allFreelancers;
+    }
+
+    return allFreelancers.filter(f =>
+      f.id.toString().includes(query) ||
+      f.status?.toLowerCase().includes(query)
+    );
+  });
+
+  // Filtered annonces based on search query
+  filteredAnnonces = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const allAnnonces = this.annonces();
+
+    if (!query) {
+      return allAnnonces;
+    }
+
+    return allAnnonces.filter(a =>
+      a.titre?.toLowerCase().includes(query) ||
+      a.description?.toLowerCase().includes(query)
+    );
+  });
 
   constructor(
     private freelancerService: FreelancerService,
@@ -75,6 +106,10 @@ export class App {
 
   onSectionChanged(section: string): void {
     this.currentSection.set(section);
+  }
+
+  onSearchChanged(query: string): void {
+    this.searchQuery.set(query);
   }
 
   onViewDetail(id: number): void {
