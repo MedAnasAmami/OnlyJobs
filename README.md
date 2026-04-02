@@ -78,7 +78,6 @@ Dans un premier terminal:
 
 ```bash
 cd /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/project/backend
-
 # Creer et activer un environnement virtuel
 python3 -m venv .venv
 source .venv/bin/activate

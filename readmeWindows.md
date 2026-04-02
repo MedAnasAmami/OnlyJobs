@@ -42,8 +42,8 @@ Telechargez et installez Git depuis [git-scm.com](https://git-scm.com/download/w
 ```cmd
 git clone <url-du-projet>
 cd project
-```
 
+```
 **Option B - Sans Git:**
 Telechargez le ZIP et extrayez-le.
 
