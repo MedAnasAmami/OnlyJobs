@@ -18,7 +18,6 @@ DROP TABLE IF EXISTS `report`;
 DROP TABLE IF EXISTS `rating`;
 DROP TABLE IF EXISTS `profil`;
 DROP TABLE IF EXISTS `annonce`;
-DROP TABLE IF EXISTS `authentification`;
 DROP TABLE IF EXISTS `freelancer`;
 DROP TABLE IF EXISTS `client`;
 DROP TABLE IF EXISTS `admin`;
@@ -88,15 +87,16 @@ CREATE TABLE `profil` (
   `description` text DEFAULT NULL,
   `competences` text DEFAULT NULL,
   `experience` text DEFAULT NULL,
+  `statut` varchar(50) NOT NULL DEFAULT 'en_attente',
   `freelancer_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`idProfil`),
   UNIQUE KEY `freelancer_id` (`freelancer_id`),
   CONSTRAINT `profil_ibfk_1` FOREIGN KEY (`freelancer_id`) REFERENCES `freelancer` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `profil` (`idProfil`, `photo`, `description`, `competences`, `experience`, `freelancer_id`) VALUES
-(1, 'photo1.jpg', 'Developpeur web', 'HTML, CSS, JS', '2 ans', 1),
-(2, 'photo2.jpg', 'Designer graphique', 'Photoshop, Illustrator', '3 ans', 2);
+INSERT INTO `profil` (`idProfil`, `photo`, `description`, `competences`, `experience`, `statut`, `freelancer_id`) VALUES
+(1, 'photo1.jpg', 'Developpeur web', 'HTML, CSS, JS', '2 ans', 'accepte', 1),
+(2, 'photo2.jpg', 'Designer graphique', 'Photoshop, Illustrator', '3 ans', 'accepte', 2);
 
 -- --------------------------------------------------------
 -- Table `annonce`
@@ -105,34 +105,19 @@ CREATE TABLE `annonce` (
   `idAnnonce` int(11) NOT NULL AUTO_INCREMENT,
   `titre` varchar(255) DEFAULT NULL,
   `description` text DEFAULT NULL,
+  `image` varchar(500) DEFAULT NULL,
   `dateCreation` date DEFAULT NULL,
+  `statut` varchar(50) NOT NULL DEFAULT 'en_attente',
   `freelancer_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`idAnnonce`),
   KEY `freelancer_id` (`freelancer_id`),
   CONSTRAINT `annonce_ibfk_1` FOREIGN KEY (`freelancer_id`) REFERENCES `freelancer` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `annonce` (`idAnnonce`, `titre`, `description`, `dateCreation`, `freelancer_id`) VALUES
-(1, 'Creation site web', 'Je propose la creation de sites modernes', '2026-03-30', 1),
-(2, 'Logo professionnel', 'Conception de logos uniques', '2026-03-30', 2),
-(3, 'Application mobile', 'Developpement Android/iOS', '2026-03-30', 1);
-
--- --------------------------------------------------------
--- Table `authentification`
--- --------------------------------------------------------
-CREATE TABLE `authentification` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `utilisateur_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `utilisateur_id` (`utilisateur_id`),
-  CONSTRAINT `authentification_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateur` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-INSERT INTO `authentification` (`id`, `utilisateur_id`) VALUES
-(1, 1),
-(2, 2),
-(3, 3),
-(4, 4);
+INSERT INTO `annonce` (`idAnnonce`, `titre`, `description`, `dateCreation`, `statut`, `freelancer_id`) VALUES
+(1, 'Creation site web', 'Je propose la creation de sites modernes', '2026-03-30', 'accepte', 1),
+(2, 'Logo professionnel', 'Conception de logos uniques', '2026-03-30', 'accepte', 2),
+(3, 'Application mobile', 'Developpement Android/iOS', '2026-03-30', 'accepte', 1);
 
 -- --------------------------------------------------------
 -- Table `rating`

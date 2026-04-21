@@ -30,6 +30,7 @@ class Profil(SQLModel, table=True):
     description: Optional[str] = Field(default=None, sa_column=Column(String(255)))
     competences: Optional[str] = Field(default=None, sa_column=Column(String(255)))
     experience: Optional[str] = Field(default=None, sa_column=Column(String(255)))
+    statut: str = Field(default="en_attente", sa_column=Column(String(50)))
     freelancer_id: int = Field(foreign_key="freelancer.id", unique=True)
 
 # ============= TABLE ANNONCE =============
@@ -39,12 +40,8 @@ class Annonce(SQLModel, table=True):
     description: str = Field(sa_column=Column(String(500)))
     image: Optional[str] = Field(default=None, sa_column=Column(String(500)))  # URL ou chemin de l'image
     dateCreation: Optional[str] = Field(default=None, sa_column=Column(String(50)))
+    statut: str = Field(default="en_attente", sa_column=Column(String(50)))
     freelancer_id: int = Field(foreign_key="freelancer.id")
-
-# ============= TABLE AUTHENTIFICATION =============
-class Authentification(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    utilisateur_id: int = Field(foreign_key="utilisateur.id")
 
 # ============= TABLE RATING =============
 class Rating(SQLModel, table=True):

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from database import get_session
 from sqlmodel import Session, select, func
-from models import Utilisateur, Freelancer, Admin, Client, Profil, Annonce, Authentification, Rating, Report
+from models import Utilisateur, Freelancer, Admin, Client, Profil, Annonce, Rating, Report
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -68,6 +68,9 @@ class ReportRequest(BaseModel):
     description: Optional[str] = None
     freelancer_id: int
     reporter_id: int
+
+class StatusUpdate(BaseModel):
+    statut: str  # 'accepte' | 'rejete' | 'en_attente'
 
 # ==================== AUTHENTIFICATION ====================
 
@@ -185,14 +188,16 @@ def create_freelancer(freelancer: Freelancer, session: Session = Depends(get_ses
 
 @app.get("/freelancers", tags=["Freelancers"])
 def read_freelancers(session: Session = Depends(get_session)):
+    """Liste publique: uniquement les freelancers dont le profil est accepte par l'admin"""
     statement = select(Freelancer)
     freelancers = session.exec(statement).all()
-    
-    # Return freelancers with user details
+
     result = []
     for freelancer in freelancers:
-        user = session.get(Utilisateur, freelancer.id)
         profil = session.exec(select(Profil).where(Profil.freelancer_id == freelancer.id)).first()
+        if not profil or profil.statut != "accepte":
+            continue
+        user = session.get(Utilisateur, freelancer.id)
         result.append({
             "id": freelancer.id,
             "status": freelancer.status,
@@ -287,6 +292,8 @@ def read_client_detail(client_id: int, session: Session = Depends(get_session)):
 # ==================== ROUTES PROFIL ====================
 @app.post("/profils", tags=["Profils"])
 def create_profil(profil: Profil, session: Session = Depends(get_session)):
+    # Chaque profil est en attente de validation admin
+    profil.statut = "en_attente"
     session.add(profil)
     session.commit()
     session.refresh(profil)
@@ -294,7 +301,8 @@ def create_profil(profil: Profil, session: Session = Depends(get_session)):
 
 @app.get("/profils", tags=["Profils"])
 def read_profils(session: Session = Depends(get_session)):
-    statement = select(Profil)
+    """Liste publique: uniquement les profils acceptes"""
+    statement = select(Profil).where(Profil.statut == "accepte")
     return session.exec(statement).all()
 
 @app.get("/profils/{profil_id}", tags=["Profils"])
@@ -327,6 +335,15 @@ def update_profil(profil_id: int, new_data: ProfilUpdate, session: Session = Dep
     if new_data.experience is not None:
         profil.experience = new_data.experience
 
+    # Toute modification de profil renvoie en moderation. Les annonces du
+    # freelancer deviennent aussi en_attente car leur validation depend
+    # du profil (relation include "Traiter annonce" -> "Traiter profil").
+    profil.statut = "en_attente"
+    annonces = session.exec(select(Annonce).where(Annonce.freelancer_id == profil.freelancer_id)).all()
+    for a in annonces:
+        a.statut = "en_attente"
+        session.add(a)
+
     session.add(profil)
     session.commit()
     session.refresh(profil)
@@ -336,6 +353,8 @@ def update_profil(profil_id: int, new_data: ProfilUpdate, session: Session = Dep
 
 @app.post("/annonces", tags=["Annonces"])
 def create_annonce(annonce: Annonce, session: Session = Depends(get_session)):
+    # Chaque annonce est en attente de validation admin
+    annonce.statut = "en_attente"
     session.add(annonce)
     session.commit()
     session.refresh(annonce)
@@ -343,7 +362,8 @@ def create_annonce(annonce: Annonce, session: Session = Depends(get_session)):
 
 @app.get("/annonces", tags=["Annonces"])
 def read_annonces(session: Session = Depends(get_session)):
-    statement = select(Annonce)
+    """Liste publique: uniquement les annonces acceptees"""
+    statement = select(Annonce).where(Annonce.statut == "accepte")
     return session.exec(statement).all()
 
 @app.get("/annonces/{annonce_id}", tags=["Annonces"])
@@ -373,6 +393,9 @@ def update_annonce(annonce_id: int, new_data: AnnonceUpdate, session: Session = 
         annonce.image = new_data.image
     if new_data.dateCreation is not None:
         annonce.dateCreation = new_data.dateCreation
+
+    # Toute modification renvoie l'annonce en moderation
+    annonce.statut = "en_attente"
 
     session.add(annonce)
     session.commit()
@@ -580,6 +603,107 @@ def read_freelancer_reports(freelancer_id: int, session: Session = Depends(get_s
 
     reports = session.exec(select(Report).where(Report.freelancer_id == freelancer_id)).all()
     return reports
+
+# ==================== MODERATION ADMIN ====================
+# Traitement des profils et annonces. Per le diagramme UML, "Traiter annonce"
+# inclut "Traiter profil": une annonce ne peut etre acceptee que si le profil
+# de son freelancer est deja accepte.
+
+@app.get("/admin/profils/pending", tags=["Moderation"])
+def admin_list_pending_profils(session: Session = Depends(get_session)):
+    """Profils en attente de validation (file d'attente admin)"""
+    profils = session.exec(select(Profil).where(Profil.statut == "en_attente")).all()
+    result = []
+    for p in profils:
+        user = session.get(Utilisateur, p.freelancer_id)
+        result.append({
+            "idProfil": p.idProfil,
+            "photo": p.photo,
+            "description": p.description,
+            "competences": p.competences,
+            "experience": p.experience,
+            "statut": p.statut,
+            "freelancer_id": p.freelancer_id,
+            "freelancer_nom": user.nom if user else "",
+            "freelancer_email": user.email if user else "",
+        })
+    return result
+
+@app.get("/admin/annonces/pending", tags=["Moderation"])
+def admin_list_pending_annonces(session: Session = Depends(get_session)):
+    """Annonces en attente de validation (file d'attente admin)"""
+    annonces = session.exec(select(Annonce).where(Annonce.statut == "en_attente")).all()
+    result = []
+    for a in annonces:
+        user = session.get(Utilisateur, a.freelancer_id)
+        profil = session.exec(select(Profil).where(Profil.freelancer_id == a.freelancer_id)).first()
+        result.append({
+            "idAnnonce": a.idAnnonce,
+            "titre": a.titre,
+            "description": a.description,
+            "image": a.image,
+            "dateCreation": a.dateCreation,
+            "statut": a.statut,
+            "freelancer_id": a.freelancer_id,
+            "freelancer_nom": user.nom if user else "",
+            "freelancer_email": user.email if user else "",
+            "profil_statut": profil.statut if profil else None,
+        })
+    return result
+
+@app.put("/admin/profils/{profil_id}/status", tags=["Moderation"])
+def admin_set_profil_status(profil_id: int, data: StatusUpdate, session: Session = Depends(get_session)):
+    """Accepter / rejeter / remettre en attente un profil.
+    Si le profil est rejete, toutes les annonces du freelancer sont
+    automatiquement rejetees (la validation d'une annonce inclut celle du profil).
+    """
+    profil = session.get(Profil, profil_id)
+    if not profil:
+        raise HTTPException(status_code=404, detail="Profil non trouve")
+
+    valid = ["en_attente", "accepte", "rejete"]
+    if data.statut not in valid:
+        raise HTTPException(status_code=400, detail=f"Statut invalide. Valeurs: {', '.join(valid)}")
+
+    profil.statut = data.statut
+
+    if data.statut == "rejete":
+        annonces = session.exec(select(Annonce).where(Annonce.freelancer_id == profil.freelancer_id)).all()
+        for a in annonces:
+            a.statut = "rejete"
+            session.add(a)
+
+    session.add(profil)
+    session.commit()
+    session.refresh(profil)
+    return profil
+
+@app.put("/admin/annonces/{annonce_id}/status", tags=["Moderation"])
+def admin_set_annonce_status(annonce_id: int, data: StatusUpdate, session: Session = Depends(get_session)):
+    """Accepter / rejeter / remettre en attente une annonce.
+    Accepter n'est autorise que si le profil du freelancer est deja accepte.
+    """
+    annonce = session.get(Annonce, annonce_id)
+    if not annonce:
+        raise HTTPException(status_code=404, detail="Annonce non trouvee")
+
+    valid = ["en_attente", "accepte", "rejete"]
+    if data.statut not in valid:
+        raise HTTPException(status_code=400, detail=f"Statut invalide. Valeurs: {', '.join(valid)}")
+
+    if data.statut == "accepte":
+        profil = session.exec(select(Profil).where(Profil.freelancer_id == annonce.freelancer_id)).first()
+        if not profil or profil.statut != "accepte":
+            raise HTTPException(
+                status_code=400,
+                detail="Le profil du freelancer doit etre accepte avant de valider ses annonces",
+            )
+
+    annonce.statut = data.statut
+    session.add(annonce)
+    session.commit()
+    session.refresh(annonce)
+    return annonce
 
 # ==================== STATISTIQUES ====================
 

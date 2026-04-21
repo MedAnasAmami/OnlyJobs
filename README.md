@@ -58,16 +58,10 @@ Important: ouvre 2 terminaux (un pour backend, un pour frontend).
 ```bash
 mysql -u root onlyjobs
 ```
-
-2. Execute le script SQL (depuis le prompt mysql):
-
-```sql
-SOURCE /chemin/absolu/vers/project/backend/onlyjobs.sql;
-```
 Exemple:
 
 ```sql
-SOURCE /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/project/backend/onlyjobs.sql;
+SOURCE /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/OnlyJobs/backend/onlyjobs.sql;
 ```
 
 Ce script cree la base `onlyjobs`, les tables et des donnees de test.
@@ -77,7 +71,7 @@ Ce script cree la base `onlyjobs`, les tables et des donnees de test.
 Dans un premier terminal:
 
 ```bash
-cd /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/project/backend
+cd /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/OnlyJobs/backend
 
 # Creer et activer un environnement virtuel
 python3 -m venv .venv
@@ -102,7 +96,7 @@ Backend disponible sur:
 Dans un deuxieme terminal:
 
 ```bash
-cd /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/project/frontend
+cd /home/medanas/Documents/GLSI/Sem2/Mini_Project_Web/OnlyJobs/frontend
 npm install
 npm start
 ```
