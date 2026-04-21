@@ -9,9 +9,10 @@ import { StatsComponent } from './components/stats/stats.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { ToastComponent } from './components/toast/toast.component';
 import { AnnonceListComponent } from './components/annonce-list/annonce-list.component';
+import { ProfileEditComponent } from './components/profile-edit/profile-edit.component';
 import { FreelancerService } from './services/freelancer.service';
 import { AnnonceService } from './services/annonce.service';
-import { Freelancer } from './models/freelancer.model';
+import { FreelancerDetail } from './models/freelancer.model';
 import { Annonce } from './models/annonce.model';
 
 @Component({
@@ -27,7 +28,8 @@ import { Annonce } from './models/annonce.model';
     StatsComponent,
     FooterComponent,
     ToastComponent,
-    AnnonceListComponent
+    AnnonceListComponent,
+    ProfileEditComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
@@ -37,7 +39,7 @@ export class App {
   @ViewChild(RegisterModalComponent) registerModal!: RegisterModalComponent;
 
   currentSection = signal('freelancers');
-  freelancers = signal<Freelancer[]>([]);
+  freelancers = signal<FreelancerDetail[]>([]);
   annonces = signal<Annonce[]>([]);
   loading = signal(true);
   searchQuery = signal('');
@@ -55,7 +57,9 @@ export class App {
 
     return allFreelancers.filter(f =>
       f.id.toString().includes(query) ||
-      f.status?.toLowerCase().includes(query)
+      f.status?.toLowerCase().includes(query) ||
+      f.nom?.toLowerCase().includes(query) ||
+      f.email?.toLowerCase().includes(query)
     );
   });
 

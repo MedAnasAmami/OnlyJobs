@@ -186,7 +186,22 @@ def create_freelancer(freelancer: Freelancer, session: Session = Depends(get_ses
 @app.get("/freelancers", tags=["Freelancers"])
 def read_freelancers(session: Session = Depends(get_session)):
     statement = select(Freelancer)
-    return session.exec(statement).all()
+    freelancers = session.exec(statement).all()
+    
+    # Return freelancers with user details
+    result = []
+    for freelancer in freelancers:
+        user = session.get(Utilisateur, freelancer.id)
+        profil = session.exec(select(Profil).where(Profil.freelancer_id == freelancer.id)).first()
+        result.append({
+            "id": freelancer.id,
+            "status": freelancer.status,
+            "nom": user.nom if user else "",
+            "email": user.email if user else "",
+            "telephone": user.telephone if user else "",
+            "profil": profil
+        })
+    return result
 
 @app.get("/freelancers/{freelancer_id}", tags=["Freelancers"])
 def read_freelancer(freelancer_id: int, session: Session = Depends(get_session)):

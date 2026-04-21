@@ -1,5 +1,5 @@
 import { Component, input, output, signal } from '@angular/core';
-import { Freelancer } from '../../models/freelancer.model';
+import { FreelancerDetail } from '../../models/freelancer.model';
 import { FreelancerCardComponent } from '../freelancer-card/freelancer-card.component';
 import { RatingModalComponent } from '../rating-modal/rating-modal.component';
 import { ReportModalComponent } from '../report-modal/report-modal.component';
@@ -12,7 +12,7 @@ import { ReportModalComponent } from '../report-modal/report-modal.component';
   styleUrl: './freelancer-list.component.css'
 })
 export class FreelancerListComponent {
-  freelancers = input<Freelancer[]>([]);
+  freelancers = input<FreelancerDetail[]>([]);
   loading = input(false);
 
   viewDetail = output<number>();

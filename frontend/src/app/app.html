@@ -45,6 +45,8 @@
   <main class="container my-5">
     <app-stats></app-stats>
   </main>
+} @else if (currentSection() === 'profile') {
+  <app-profile-edit (sectionChanged)="onSectionChanged($event)"></app-profile-edit>
 }
 
 <app-footer></app-footer>

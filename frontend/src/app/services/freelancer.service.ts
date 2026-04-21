@@ -32,8 +32,8 @@ export class FreelancerService {
   constructor(private http: HttpClient) {}
 
   // Liste tous les freelancers
-  getFreelancers(): Observable<Freelancer[]> {
-    return this.http.get<Freelancer[]>(`${this.apiUrl}/freelancers`);
+  getFreelancers(): Observable<FreelancerDetail[]> {
+    return this.http.get<FreelancerDetail[]>(`${this.apiUrl}/freelancers`);
   }
 
   // Obtenir un freelancer par ID

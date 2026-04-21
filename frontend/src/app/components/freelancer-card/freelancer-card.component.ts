@@ -1,7 +1,7 @@
 import { Component, input, output, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Freelancer } from '../../models/freelancer.model';
+import { FreelancerDetail } from '../../models/freelancer.model';
 import { AuthService } from '../../services/auth.service';
 import { FreelancerService, AverageRating } from '../../services/freelancer.service';
 import { ToastService } from '../../services/toast.service';
@@ -14,7 +14,7 @@ import { ToastService } from '../../services/toast.service';
   styleUrl: './freelancer-card.component.css'
 })
 export class FreelancerCardComponent implements OnInit {
-  freelancer = input.required<Freelancer>();
+  freelancer = input.required<FreelancerDetail>();
   index = input(0);
 
   viewDetail = output<number>();

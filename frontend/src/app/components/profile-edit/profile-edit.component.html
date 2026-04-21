@@ -1,0 +1,153 @@
+<div class="profile-edit-container">
+  <div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+      <div class="col-md-8 offset-md-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1 class="fw-bold">
+            <i class="bi bi-person-circle text-primary me-2"></i>Complétez votre profil
+          </h1>
+          <button class="btn btn-outline-secondary" (click)="cancel()" [disabled]="saving()">
+            <i class="bi bi-x"></i> Annuler
+          </button>
+        </div>
+        <p class="text-muted">Remplissez les informations ci-dessous pour que les clients vous trouvent facilement</p>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="row">
+        <div class="col-md-8 offset-md-2 text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+          </div>
+          <p class="mt-2 text-muted">Chargement de vos informations...</p>
+        </div>
+      </div>
+    } @else {
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card shadow-sm">
+            <div class="card-body p-4">
+              <!-- Photo Upload -->
+              <div class="mb-4">
+                <h5 class="card-title mb-3">
+                  <i class="bi bi-image text-primary me-2"></i>Photo de profil
+                </h5>
+                <div class="photo-upload-area">
+                  @if (photoPreview) {
+                    <div class="preview-container">
+                      <img [src]="photoPreview" alt="Preview" class="profile-photo-preview">
+                    </div>
+                  } @else {
+                    <div class="preview-placeholder">
+                      <i class="bi bi-image display-1 text-muted"></i>
+                      <p class="mt-2 text-muted">Aucune photo</p>
+                    </div>
+                  }
+                  <input
+                    type="file"
+                    #fileInput
+                    (change)="onPhotoSelected($event)"
+                    accept="image/*"
+                    class="d-none"
+                  >
+                  <button
+                    type="button"
+                    class="btn btn-outline-primary mt-3"
+                    (click)="fileInput.click()"
+                    [disabled]="saving()"
+                  >
+                    <i class="bi bi-upload me-2"></i>Choisir une photo
+                  </button>
+                </div>
+              </div>
+
+              <hr>
+
+              <!-- Description -->
+              <div class="mb-4">
+                <label for="description" class="form-label fw-bold">
+                  <i class="bi bi-pencil-square text-primary me-2"></i>Description
+                </label>
+                <textarea
+                  id="description"
+                  class="form-control"
+                  [(ngModel)]="description"
+                  placeholder="Décrivez vos services, votre expérience et vos spécialités..."
+                  rows="4"
+                  [disabled]="saving()"
+                ></textarea>
+                <small class="text-muted">Aidez les clients à comprendre qui vous êtes et ce que vous offrez</small>
+              </div>
+
+              <!-- Competences -->
+              <div class="mb-4">
+                <label for="competences" class="form-label fw-bold">
+                  <i class="bi bi-lightning-fill text-primary me-2"></i>Compétences
+                </label>
+                <textarea
+                  id="competences"
+                  class="form-control"
+                  [(ngModel)]="competences"
+                  placeholder="Ex: HTML, CSS, JavaScript, Angular, Node.js (séparées par des virgules)"
+                  rows="3"
+                  [disabled]="saving()"
+                ></textarea>
+                <small class="text-muted">Vos compétences principales séparées par des virgules</small>
+              </div>
+
+              <!-- Experience -->
+              <div class="mb-4">
+                <label for="experience" class="form-label fw-bold">
+                  <i class="bi bi-briefcase text-primary me-2"></i>Expérience
+                </label>
+                <textarea
+                  id="experience"
+                  class="form-control"
+                  [(ngModel)]="experience"
+                  placeholder="Ex: 5 ans d'expérience en développement web, 3 ans avec Angular..."
+                  rows="3"
+                  [disabled]="saving()"
+                ></textarea>
+                <small class="text-muted">Décrivez votre expérience professionnelle</small>
+              </div>
+
+              <hr>
+
+              <!-- Action Buttons -->
+              <div class="d-flex gap-2 justify-content-end">
+                <button
+                  class="btn btn-outline-secondary"
+                  (click)="cancel()"
+                  [disabled]="saving()"
+                >
+                  <i class="bi bi-x me-2"></i>Annuler
+                </button>
+                <button
+                  class="btn btn-primary"
+                  (click)="saveProfile()"
+                  [disabled]="saving()"
+                >
+                  @if (saving()) {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Sauvegarde en cours...
+                  } @else {
+                    <i class="bi bi-check me-2"></i>Enregistrer
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info Box -->
+          <div class="alert alert-info mt-4" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Conseil:</strong> Un profil complet avec photo et description attire plus de clients!
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

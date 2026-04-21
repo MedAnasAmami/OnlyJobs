@@ -9,10 +9,10 @@ export interface Profil {
 }
 
 export interface ProfilCreate {
-  photo: string;
-  description: string;
-  competences: string;
-  experience: string;
+  photo?: string | null;
+  description?: string | null;
+  competences?: string | null;
+  experience?: string | null;
   freelancer_id: number;
 }
 

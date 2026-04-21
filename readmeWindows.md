@@ -15,6 +15,11 @@ python --version
 pip --version
 ```
 
+Si `pip` n'est pas reconnu, utilisez:
+```cmd
+python -m pip --version
+```
+
 ### 2. Node.js 18+
 Telechargez et installez Node.js depuis [nodejs.org](https://nodejs.org/)
 
@@ -42,8 +47,8 @@ Telechargez et installez Git depuis [git-scm.com](https://git-scm.com/download/w
 ```cmd
 git clone <url-du-projet>
 cd project
-
 ```
+
 **Option B - Sans Git:**
 Telechargez le ZIP et extrayez-le.
 
@@ -96,7 +101,7 @@ venv\Scripts\activate
 
 4. Installez les dependances:
 ```cmd
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 5. Configurez la connexion a la base de donnees (si necessaire):
@@ -122,14 +127,22 @@ npm install
 
 ---
 
-## Lancement
-
 ### Terminal 1 - Backend (FastAPI)
+
+Dans le terminal du backend (dans le dossier `backend`) :
+
 ```cmd
 cd backend
 venv\Scripts\activate
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python -m pip install -r requirements.txt
+
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Notes:
+- Si la commande `uvicorn ...` n'est pas reconnue, `python -m uvicorn ...` fonctionne presque toujours sur Windows.
+- Si tu utilises PowerShell au lieu de CMD, l'activation est:
+	- `./venv/Scripts/Activate.ps1`
 
 Le backend sera accessible sur: http://localhost:8000
 Documentation API: http://localhost:8000/docs
