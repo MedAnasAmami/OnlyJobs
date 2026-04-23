@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, computed } from '@angular/core';
 import { FreelancerDetail } from '../../models/freelancer.model';
 import { FreelancerCardComponent } from '../freelancer-card/freelancer-card.component';
 import { RatingModalComponent } from '../rating-modal/rating-modal.component';
@@ -14,6 +14,11 @@ import { ReportModalComponent } from '../report-modal/report-modal.component';
 export class FreelancerListComponent {
   freelancers = input<FreelancerDetail[]>([]);
   loading = input(false);
+
+  // Filtrer pour n'afficher que les profils acceptés dans la liste des cartes
+  acceptedFreelancers = computed(() => 
+    this.freelancers().filter(f => f.profil?.statut === 'accepte')
+  );
 
   viewDetail = output<number>();
 

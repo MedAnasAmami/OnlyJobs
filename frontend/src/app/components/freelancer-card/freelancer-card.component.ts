@@ -1,10 +1,12 @@
-import { Component, input, output, signal, OnInit } from '@angular/core';
+import { Component, input, output, signal, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FreelancerDetail } from '../../models/freelancer.model';
 import { AuthService } from '../../services/auth.service';
 import { FreelancerService, AverageRating } from '../../services/freelancer.service';
 import { ToastService } from '../../services/toast.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-freelancer-card',
@@ -22,6 +24,18 @@ export class FreelancerCardComponent implements OnInit {
   reportFreelancer = output<number>();
 
   averageRating = signal<AverageRating>({ average: 0, count: 0 });
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly placeholderImg =
+    'data:image/svg+xml;charset=UTF-8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+         <rect width="100%" height="100%" fill="#f1f3f5"/>
+         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#6c757d" font-family="Arial, sans-serif" font-size="28">
+           No image
+         </text>
+       </svg>`
+    );
 
   constructor(
     public authService: AuthService,
@@ -31,6 +45,14 @@ export class FreelancerCardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAverageRating();
+
+    this.freelancerService.ratingChanged$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((freelancerId) => {
+        if (freelancerId === this.freelancer().id) {
+          this.loadAverageRating();
+        }
+      });
   }
 
   loadAverageRating(): void {
@@ -56,6 +78,40 @@ export class FreelancerCardComponent implements OnInit {
       return 'bi-star-half';
     }
     return 'bi-star';
+  }
+
+  photoUrl(): string {
+    const photo = this.freelancer().profil?.photo;
+    if (!photo) {
+      return this.placeholderImg;
+    }
+
+    // Data URL (base64)
+    if (photo.startsWith('data:')) {
+      return photo;
+    }
+
+    // Already absolute
+    if (photo.startsWith('http://') || photo.startsWith('https://')) {
+      return photo;
+    }
+
+    // Normalize leading slash
+    if (photo.startsWith('/')) {
+      return `${environment.apiUrl}${photo}`;
+    }
+
+    // Handle stored paths like "uploads/xxx.jpg"
+    if (photo.startsWith('uploads/')) {
+      return `${environment.apiUrl}/${photo}`;
+    }
+
+    return `${environment.apiUrl}/uploads/${photo}`;
+  }
+
+  onImgError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = this.placeholderImg;
   }
 
   onViewDetail(): void {

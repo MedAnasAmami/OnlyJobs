@@ -5,6 +5,7 @@ export interface Profil {
   description?: string;
   competences?: string;
   experience?: string;
+  statut?: string;
   freelancer_id: number;
 }
 

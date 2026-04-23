@@ -10,6 +10,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { ToastComponent } from './components/toast/toast.component';
 import { AnnonceListComponent } from './components/annonce-list/annonce-list.component';
 import { ProfileEditComponent } from './components/profile-edit/profile-edit.component';
+import { AdminModerationComponent } from './components/admin-moderation/admin-moderation.component';
 import { FreelancerService } from './services/freelancer.service';
 import { AnnonceService } from './services/annonce.service';
 import { FreelancerDetail } from './models/freelancer.model';
@@ -29,7 +30,8 @@ import { Annonce } from './models/annonce.model';
     FooterComponent,
     ToastComponent,
     AnnonceListComponent,
-    ProfileEditComponent
+    ProfileEditComponent,
+    AdminModerationComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'

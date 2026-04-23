@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { FreelancerService } from '../../services/freelancer.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
+import { firstValueFrom } from 'rxjs';
 
 declare var bootstrap: any;
 
@@ -19,7 +20,7 @@ export class RatingModalComponent implements OnChanges {
 
   selectedRating = signal(0);
   hoveredRating = signal(0);
-  comment = signal('');
+  comment = '';
   submitting = signal(false);
 
   private modal: any;
@@ -41,7 +42,7 @@ export class RatingModalComponent implements OnChanges {
   private resetForm(): void {
     this.selectedRating.set(0);
     this.hoveredRating.set(0);
-    this.comment.set('');
+    this.comment = '';
   }
 
   private openModal(): void {
@@ -88,12 +89,14 @@ export class RatingModalComponent implements OnChanges {
     this.submitting.set(true);
 
     try {
-      await this.freelancerService.createRating({
+      await firstValueFrom(this.freelancerService.createRating({
         note: rating,
-        commentaire: this.comment(),
+        commentaire: this.comment,
         freelancer_id: freelancerId,
         client_id: user.id
-      }).toPromise();
+      }));
+
+      this.freelancerService.notifyRatingChanged(freelancerId);
 
       if (this.modal) {
         this.modal.hide();

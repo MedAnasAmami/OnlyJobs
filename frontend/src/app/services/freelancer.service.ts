@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Freelancer, FreelancerDetail } from '../models/freelancer.model';
 import { Profil } from '../models/profil.model';
@@ -29,7 +29,14 @@ export interface AverageRating {
 export class FreelancerService {
   private apiUrl = environment.apiUrl;
 
+  private ratingChangedSubject = new Subject<number>();
+  ratingChanged$ = this.ratingChangedSubject.asObservable();
+
   constructor(private http: HttpClient) {}
+
+  notifyRatingChanged(freelancerId: number): void {
+    this.ratingChangedSubject.next(freelancerId);
+  }
 
   // Liste tous les freelancers
   getFreelancers(): Observable<FreelancerDetail[]> {

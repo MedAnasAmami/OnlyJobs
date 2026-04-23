@@ -1,10 +1,11 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Annonce } from '../../models/annonce.model';
 import { AnnonceService } from '../../services/annonce.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
+import { FreelancerService } from '../../services/freelancer.service';
 
 declare var bootstrap: any;
 
@@ -54,7 +55,7 @@ declare var bootstrap: any;
                 <p>{{ annonce.description }}</p>
                 <div class="d-flex justify-content-between align-items-center">
                   <span class="date"><i class="bi bi-calendar me-1"></i>{{ annonce.dateCreation }}</span>
-                  <span class="badge bg-primary">Freelancer #{{ annonce.freelancer_id }}</span>
+                  <span class="badge bg-primary"><i class="bi bi-person me-1"></i>{{ getFreelancerName(annonce.freelancer_id) }}</span>
                 </div>
               </div>
             </div>
@@ -284,7 +285,7 @@ declare var bootstrap: any;
     }
   `]
 })
-export class AnnonceListComponent {
+export class AnnonceListComponent implements OnInit {
   @Input() annonces: Annonce[] = [];
   @Output() annonceUpdated = new EventEmitter<void>();
 
@@ -299,14 +300,49 @@ export class AnnonceListComponent {
   selectedFile: File | null = null;
   formImageUrl: string | null = null;
 
+  private freelancerNames = new Map<number, string>();
+
   private modal: any;
   private deleteModal: any;
 
   constructor(
     public authService: AuthService,
     private annonceService: AnnonceService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private freelancerService: FreelancerService
   ) {}
+
+  ngOnInit(): void {
+    // Charger les feedbacks si besoin, mais surtout s'abonner pour rafraîchir la liste
+    this.loadFreelancers();
+
+    // Recharger la liste si un freelancer change / s'inscrit
+    this.freelancerService.ratingChanged$.subscribe(() => {
+      this.loadFreelancers();
+    });
+  }
+
+  loadFreelancers(): void {
+    this.freelancerService.getFreelancers().subscribe({
+      next: (freelancers) => {
+        freelancers.forEach(f => {
+          if (f.id && f.nom) {
+            this.freelancerNames.set(f.id, f.nom);
+          }
+        });
+      },
+      error: (err) => console.error('Erreur chargement freelancers:', err)
+    });
+  }
+
+  getFreelancerName(freelancerId: number): string {
+    const name = this.freelancerNames.get(freelancerId);
+    if (name) return name;
+    
+    // Si pas trouvé dans le Map local, on tente un refresh rapide
+    // (L'appel est asynchrone donc le premier passage affichera '#' mais le second le nom)
+    return `Freelancer #${freelancerId}`;
+  }
 
   getImageUrl(imagePath: string | undefined): string {
     return this.annonceService.getImageUrl(imagePath);
