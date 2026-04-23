@@ -313,7 +313,7 @@ export class AnnonceListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Charger les feedbacks si besoin, mais surtout s'abonner pour rafraîchir la liste
+    // Charger les freelancers et s'abonner pour rafraîchir la liste
     this.loadFreelancers();
 
     // Recharger la liste si un freelancer change / s'inscrit
@@ -338,10 +338,10 @@ export class AnnonceListComponent implements OnInit {
   getFreelancerName(freelancerId: number): string {
     const name = this.freelancerNames.get(freelancerId);
     if (name) return name;
-    
+
     // Si pas trouvé dans le Map local, on tente un refresh rapide
-    // (L'appel est asynchrone donc le premier passage affichera '#' mais le second le nom)
-    return `Freelancer #${freelancerId}`;
+    this.loadFreelancers();
+    return 'Inconnu';
   }
 
   getImageUrl(imagePath: string | undefined): string {
