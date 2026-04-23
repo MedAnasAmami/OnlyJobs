@@ -301,6 +301,7 @@ export class AnnonceListComponent implements OnInit {
   formImageUrl: string | null = null;
 
   private freelancerNames = new Map<number, string>();
+  private freelancerDetailLoading = new Set<number>();
 
   private modal: any;
   private deleteModal: any;
@@ -313,7 +314,7 @@ export class AnnonceListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Charger les freelancers et s'abonner pour rafraîchir la liste
+    // Charge la liste publique (souvent filtrée côté backend)
     this.loadFreelancers();
 
     // Recharger la liste si un freelancer change / s'inscrit
@@ -326,8 +327,10 @@ export class AnnonceListComponent implements OnInit {
     this.freelancerService.getFreelancers().subscribe({
       next: (freelancers) => {
         freelancers.forEach(f => {
-          if (f.id && f.nom) {
-            this.freelancerNames.set(f.id, f.nom);
+          const id = Number(f.id);
+          const nom = (f.nom ?? '').trim();
+          if (!Number.isNaN(id) && nom) {
+            this.freelancerNames.set(id, nom);
           }
         });
       },
@@ -336,12 +339,31 @@ export class AnnonceListComponent implements OnInit {
   }
 
   getFreelancerName(freelancerId: number): string {
-    const name = this.freelancerNames.get(freelancerId);
+    const id = Number(freelancerId);
+    const name = this.freelancerNames.get(id);
     if (name) return name;
 
-    // Si pas trouvé dans le Map local, on tente un refresh rapide
-    this.loadFreelancers();
-    return 'Inconnu';
+    // Fallback: l'endpoint /freelancers est filtré (ex: profil accepté).
+    // Pour afficher le nom sur les annonces, on récupère le détail par ID.
+    if (!Number.isNaN(id) && !this.freelancerDetailLoading.has(id)) {
+      this.freelancerDetailLoading.add(id);
+      this.freelancerService.getFreelancerDetail(id).subscribe({
+        next: (detail) => {
+          const nom = (detail?.nom ?? '').trim();
+          if (nom) {
+            this.freelancerNames.set(id, nom);
+          }
+        },
+        error: () => {
+          this.freelancerDetailLoading.delete(id);
+        },
+        complete: () => {
+          this.freelancerDetailLoading.delete(id);
+        }
+      });
+    }
+
+    return 'Chargement...';
   }
 
   getImageUrl(imagePath: string | undefined): string {
