@@ -249,6 +249,9 @@ ALTER TABLE `annonce`
   ADD PRIMARY KEY (`idAnnonce`),
   ADD KEY `freelancer_id` (`freelancer_id`);
 
+ALTER TABLE `annonce`
+  ADD CONSTRAINT `chk_description_length` CHECK (CHAR_LENGTH(`description`) <= 500);
+
 --
 -- Index pour la table `client`
 --
