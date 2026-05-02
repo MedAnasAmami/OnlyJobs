@@ -20,7 +20,7 @@
         <p class="mt-3 text-muted">Aucun freelancer trouve</p>
       </div>
     } @else {
-      @for (freelancer of acceptedFreelancers(); track freelancer.id) {
+      @for (freelancer of pagedFreelancers(); track freelancer.id) {
         <div class="col-lg-4 col-md-6">
           <app-freelancer-card
             [freelancer]="freelancer"
@@ -33,6 +33,26 @@
       }
     }
   </div>
+
+  @if (!loading() && acceptedFreelancers().length > pageSize) {
+    <nav class="mt-4" aria-label="Pagination freelancers">
+      <ul class="pagination justify-content-center mb-0">
+        <li class="page-item" [class.disabled]="effectivePage() <= 1">
+          <a class="page-link" href="#" (click)="$event.preventDefault(); prevPage()">Precedent</a>
+        </li>
+
+        @for (p of pages(); track p) {
+          <li class="page-item" [class.active]="p === effectivePage()">
+            <a class="page-link" href="#" (click)="$event.preventDefault(); goToPage(p)">{{ p }}</a>
+          </li>
+        }
+
+        <li class="page-item" [class.disabled]="effectivePage() >= totalPages()">
+          <a class="page-link" href="#" (click)="$event.preventDefault(); nextPage()">Suivant</a>
+        </li>
+      </ul>
+    </nav>
+  }
 </section>
 
 <!-- Rating Modal -->

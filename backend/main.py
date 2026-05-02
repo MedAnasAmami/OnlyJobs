@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from database import get_session
 from sqlmodel import Session, select, func
-from models import Utilisateur, Freelancer, Admin, Client, Profil, Annonce, Rating, Report
+from models import Utilisateur, Freelancer, Admin, Client, Profil, Annonce, Rating, Report, Service
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -54,8 +54,33 @@ class ProfilUpdate(BaseModel):
 class AnnonceUpdate(BaseModel):
     titre: Optional[str] = None
     description: Optional[str] = None
+    categorie: Optional[str] = None
+    delai: Optional[int] = None
     image: Optional[str] = None
     dateCreation: Optional[str] = None
+
+class ServiceRequest(BaseModel):
+    titre: str
+    description: Optional[str] = None
+    delai: int
+    categorie: str
+    statut: Optional[str] = None
+    freelancer_id: int
+    annonce_id: Optional[int] = None
+    client_id: Optional[int] = None
+
+class ServiceUpdate(BaseModel):
+    titre: Optional[str] = None
+    description: Optional[str] = None
+    delai: Optional[int] = None
+    categorie: Optional[str] = None
+    statut: Optional[str] = None
+    annonce_id: Optional[int] = None
+    client_id: Optional[int] = None
+    date_choix: Optional[str] = None
+
+class ServiceChooseRequest(BaseModel):
+    client_id: int
 
 class RatingRequest(BaseModel):
     note: int  # 1-5
@@ -66,8 +91,12 @@ class RatingRequest(BaseModel):
 class ReportRequest(BaseModel):
     raison: str  # spam, comportement, autre
     description: Optional[str] = None
-    freelancer_id: int
+    freelancer_id: Optional[int] = None
+    client_id: Optional[int] = None
     reporter_id: int
+
+class ReportStatusUpdate(BaseModel):
+    statut: str  # en_attente | traite | rejete
 
 class StatusUpdate(BaseModel):
     statut: str  # 'accepte' | 'rejete' | 'en_attente'
@@ -389,6 +418,10 @@ def update_annonce(annonce_id: int, new_data: AnnonceUpdate, session: Session = 
         annonce.titre = new_data.titre
     if new_data.description is not None:
         annonce.description = new_data.description
+    if new_data.categorie is not None:
+        annonce.categorie = new_data.categorie
+    if new_data.delai is not None:
+        annonce.delai = new_data.delai
     if new_data.image is not None:
         annonce.image = new_data.image
     if new_data.dateCreation is not None:
@@ -410,6 +443,157 @@ def delete_annonce(annonce_id: int, session: Session = Depends(get_session)):
     session.delete(annonce)
     session.commit()
     return {"message": "Annonce supprimee"}
+
+# ==================== ROUTES SERVICE ====================
+
+@app.post("/services", tags=["Services"])
+def create_service(data: ServiceRequest, session: Session = Depends(get_session)):
+    freelancer = session.get(Freelancer, data.freelancer_id)
+    if not freelancer:
+        raise HTTPException(status_code=404, detail="Freelancer non trouve")
+
+    if data.annonce_id is not None:
+        annonce = session.get(Annonce, data.annonce_id)
+        if not annonce:
+            raise HTTPException(status_code=404, detail="Annonce non trouvee")
+
+    if data.client_id is not None:
+        client = session.get(Client, data.client_id)
+        if not client:
+            raise HTTPException(status_code=404, detail="Client non trouve")
+
+    # Prevent duplicate orders for the same annonce by the same client
+    if data.annonce_id is not None and data.client_id is not None:
+        existing = session.exec(
+            select(Service).where(
+                Service.annonce_id == data.annonce_id,
+                Service.client_id == data.client_id,
+            )
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Vous avez deja commande cette annonce")
+
+    service = Service(
+        titre=data.titre,
+        description=data.description,
+        delai=data.delai,
+        categorie=data.categorie,
+        statut=data.statut or "actif",
+        freelancer_id=data.freelancer_id,
+        annonce_id=data.annonce_id,
+        client_id=data.client_id
+    )
+
+    if service.statut == "choisi" and service.client_id is not None:
+        service.date_choix = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    session.add(service)
+    session.commit()
+    session.refresh(service)
+    return service
+
+@app.get("/services", tags=["Services"])
+def read_services(
+    categorie: Optional[str] = None,
+    annonce_id: Optional[int] = None,
+    session: Session = Depends(get_session)
+):
+    statement = select(Service)
+    if categorie:
+        statement = statement.where(Service.categorie == categorie)
+    if annonce_id is not None:
+        statement = statement.where(Service.annonce_id == annonce_id)
+    return session.exec(statement).all()
+
+@app.get("/services/{service_id}", tags=["Services"])
+def read_service(service_id: int, session: Session = Depends(get_session)):
+    service = session.get(Service, service_id)
+    if not service:
+        raise HTTPException(status_code=404, detail="Service non trouve")
+    return service
+
+@app.get("/annonces/{annonce_id}/services", tags=["Services"])
+def read_annonce_services(annonce_id: int, session: Session = Depends(get_session)):
+    annonce = session.get(Annonce, annonce_id)
+    if not annonce:
+        raise HTTPException(status_code=404, detail="Annonce non trouvee")
+
+    services = session.exec(select(Service).where(Service.annonce_id == annonce_id)).all()
+    return services
+
+@app.put("/services/{service_id}", tags=["Services"])
+def update_service(service_id: int, data: ServiceUpdate, session: Session = Depends(get_session)):
+    service = session.get(Service, service_id)
+    if not service:
+        raise HTTPException(status_code=404, detail="Service non trouve")
+
+    if data.titre is not None:
+        service.titre = data.titre
+    if data.description is not None:
+        service.description = data.description
+    if data.delai is not None:
+        service.delai = data.delai
+    if data.categorie is not None:
+        service.categorie = data.categorie
+    if data.statut is not None:
+        service.statut = data.statut
+    if data.annonce_id is not None:
+        annonce = session.get(Annonce, data.annonce_id)
+        if not annonce:
+            raise HTTPException(status_code=404, detail="Annonce non trouvee")
+        service.annonce_id = data.annonce_id
+    if data.client_id is not None:
+        client = session.get(Client, data.client_id)
+        if not client:
+            raise HTTPException(status_code=404, detail="Client non trouve")
+        service.client_id = data.client_id
+    if data.date_choix is not None:
+        service.date_choix = data.date_choix
+
+    session.add(service)
+    session.commit()
+    session.refresh(service)
+    return service
+
+@app.put("/services/{service_id}/choose", tags=["Services"])
+def choose_service(service_id: int, data: ServiceChooseRequest, session: Session = Depends(get_session)):
+    service = session.get(Service, service_id)
+    if not service:
+        raise HTTPException(status_code=404, detail="Service non trouve")
+
+    client = session.get(Client, data.client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client non trouve")
+
+    service.client_id = data.client_id
+    service.statut = "choisi"
+    service.date_choix = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    session.add(service)
+    session.commit()
+    session.refresh(service)
+    return service
+
+@app.put("/services/{service_id}/done", tags=["Services"])
+def mark_service_done(service_id: int, session: Session = Depends(get_session)):
+    service = session.get(Service, service_id)
+    if not service:
+        raise HTTPException(status_code=404, detail="Service non trouve")
+
+    service.statut = "fait"
+    session.add(service)
+    session.commit()
+    session.refresh(service)
+    return service
+
+@app.delete("/services/{service_id}", tags=["Services"])
+def delete_service(service_id: int, session: Session = Depends(get_session)):
+    service = session.get(Service, service_id)
+    if not service:
+        raise HTTPException(status_code=404, detail="Service non trouve")
+    session.delete(service)
+    session.commit()
+    return {"message": "Service supprime"}
 
 # ==================== UPLOAD ====================
 
@@ -535,10 +719,19 @@ def delete_rating(rating_id: int, session: Session = Depends(get_session)):
 @app.post("/reports", tags=["Reports"])
 def create_report(data: ReportRequest, session: Session = Depends(get_session)):
     """Creer un nouveau signalement"""
-    # Verifier que le freelancer existe
-    freelancer = session.get(Freelancer, data.freelancer_id)
-    if not freelancer:
-        raise HTTPException(status_code=404, detail="Freelancer non trouve")
+    # Validate target (exactly one)
+    if (data.freelancer_id is None and data.client_id is None) or (data.freelancer_id is not None and data.client_id is not None):
+        raise HTTPException(status_code=400, detail="Vous devez signaler soit un freelancer soit un client")
+
+    if data.freelancer_id is not None:
+        freelancer = session.get(Freelancer, data.freelancer_id)
+        if not freelancer:
+            raise HTTPException(status_code=404, detail="Freelancer non trouve")
+
+    if data.client_id is not None:
+        client = session.get(Client, data.client_id)
+        if not client:
+            raise HTTPException(status_code=404, detail="Client non trouve")
 
     # Verifier que le reporter existe
     reporter = session.get(Utilisateur, data.reporter_id)
@@ -556,6 +749,7 @@ def create_report(data: ReportRequest, session: Session = Depends(get_session)):
         date_creation=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         statut="en_attente",
         freelancer_id=data.freelancer_id,
+        client_id=data.client_id,
         reporter_id=data.reporter_id
     )
     session.add(report)
@@ -578,17 +772,17 @@ def read_report(report_id: int, session: Session = Depends(get_session)):
     return report
 
 @app.put("/reports/{report_id}/status", tags=["Reports"])
-def update_report_status(report_id: int, statut: str, session: Session = Depends(get_session)):
+def update_report_status(report_id: int, data: ReportStatusUpdate, session: Session = Depends(get_session)):
     """Mettre a jour le statut d'un signalement (admin only)"""
     report = session.get(Report, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Signalement non trouve")
 
     valid_statuts = ["en_attente", "traite", "rejete"]
-    if statut not in valid_statuts:
+    if data.statut not in valid_statuts:
         raise HTTPException(status_code=400, detail=f"Statut invalide. Valeurs acceptees: {', '.join(valid_statuts)}")
 
-    report.statut = statut
+    report.statut = data.statut
     session.add(report)
     session.commit()
     session.refresh(report)
@@ -602,6 +796,16 @@ def read_freelancer_reports(freelancer_id: int, session: Session = Depends(get_s
         raise HTTPException(status_code=404, detail="Freelancer non trouve")
 
     reports = session.exec(select(Report).where(Report.freelancer_id == freelancer_id)).all()
+    return reports
+
+@app.get("/clients/{client_id}/reports", tags=["Reports"])
+def read_client_reports(client_id: int, session: Session = Depends(get_session)):
+    """Obtenir tous les signalements d'un client"""
+    client = session.get(Client, client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client non trouve")
+
+    reports = session.exec(select(Report).where(Report.client_id == client_id)).all()
     return reports
 
 # ==================== MODERATION ADMIN ====================

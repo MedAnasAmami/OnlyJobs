@@ -4,14 +4,16 @@ export interface Report {
   description?: string;
   date_creation: string;
   statut: string;
-  freelancer_id: number;
+  freelancer_id?: number | null;
+  client_id?: number | null;
   reporter_id: number;
 }
 
 export interface ReportRequest {
   raison: string;
   description?: string;
-  freelancer_id: number;
+  freelancer_id?: number | null;
+  client_id?: number | null;
   reporter_id: number;
 }
 

@@ -44,13 +44,13 @@ export class App {
   freelancers = signal<FreelancerDetail[]>([]);
   annonces = signal<Annonce[]>([]);
   loading = signal(true);
-  searchQuery = signal('');
+  freelancerSearchQuery = signal('');
 
   selectedFreelancerId = signal<number | null>(null);
 
   // Filtered freelancers based on search query
   filteredFreelancers = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
+    const query = this.freelancerSearchQuery().toLowerCase().trim();
     const allFreelancers = this.freelancers();
 
     if (!query) {
@@ -66,19 +66,6 @@ export class App {
   });
 
   // Filtered annonces based on search query
-  filteredAnnonces = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const allAnnonces = this.annonces();
-
-    if (!query) {
-      return allAnnonces;
-    }
-
-    return allAnnonces.filter(a =>
-      a.titre?.toLowerCase().includes(query) ||
-      a.description?.toLowerCase().includes(query)
-    );
-  });
 
   constructor(
     private freelancerService: FreelancerService,
@@ -114,9 +101,14 @@ export class App {
     this.currentSection.set(section);
   }
 
-  onSearchChanged(query: string): void {
-    this.searchQuery.set(query);
+  setFreelancerSearch(query: string): void {
+    this.freelancerSearchQuery.set(query);
   }
+
+  clearFreelancerSearch(): void {
+    this.freelancerSearchQuery.set('');
+  }
+
 
   onViewDetail(id: number): void {
     this.selectedFreelancerId.set(id);

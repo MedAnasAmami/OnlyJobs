@@ -10,6 +10,9 @@ venv/
 ENV/
 .env/
 
+# Project-specific virtualenv location
+backend/ven/
+
 # Project env files
 backend/.env
 frontend/.env

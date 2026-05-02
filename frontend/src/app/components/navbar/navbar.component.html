@@ -7,53 +7,34 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" [class.active]="activeSection === 'freelancers'" href="#" (click)="changeSection('freelancers'); $event.preventDefault()">
-            <i class="bi bi-people me-1"></i>Freelancers
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" [class.active]="activeSection === 'annonces'" href="#" (click)="changeSection('annonces'); $event.preventDefault()">
-            <i class="bi bi-megaphone me-1"></i>Annonces
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" [class.active]="activeSection === 'stats'" href="#" (click)="changeSection('stats'); $event.preventDefault()">
-            <i class="bi bi-bar-chart me-1"></i>Statistiques
-          </a>
-        </li>
-        @if (authService.isAdmin()) {
+      <div class="navbar-center">
+        <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link" [class.active]="activeSection === 'moderation'" href="#" (click)="changeSection('moderation'); $event.preventDefault()">
-              <i class="bi bi-shield-check me-1"></i>Moderation
+            <a class="nav-link" [class.active]="activeSection === 'freelancers'" href="#" (click)="changeSection('freelancers'); $event.preventDefault()">
+              <i class="bi bi-people me-1"></i>Freelancers
             </a>
           </li>
-        }
-      </ul>
-
-      <!-- Search Bar -->
-      <div class="search-container me-3">
-        <div class="input-group">
-          <input
-            type="text"
-            class="form-control search-input"
-            placeholder="Rechercher..."
-            [(ngModel)]="searchQuery"
-            (keyup.enter)="onSearch()"
-            (input)="onSearch()">
-          @if (searchQuery) {
-            <button class="btn btn-outline-light" type="button" (click)="clearSearch()">
-              <i class="bi bi-x-lg"></i>
-            </button>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeSection === 'annonces'" href="#" (click)="changeSection('annonces'); $event.preventDefault()">
+              <i class="bi bi-megaphone me-1"></i>Annonces
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeSection === 'stats'" href="#" (click)="changeSection('stats'); $event.preventDefault()">
+              <i class="bi bi-bar-chart me-1"></i>Statistiques
+            </a>
+          </li>
+          @if (authService.isAdmin()) {
+            <li class="nav-item">
+              <a class="nav-link" [class.active]="activeSection === 'moderation'" href="#" (click)="changeSection('moderation'); $event.preventDefault()">
+                <i class="bi bi-shield-check me-1"></i>Moderation
+              </a>
+            </li>
           }
-          <button class="btn btn-light" type="button" (click)="onSearch()">
-            <i class="bi bi-search"></i>
-          </button>
-        </div>
+        </ul>
       </div>
 
-      <div class="d-flex align-items-center">
+      <div class="d-flex align-items-center navbar-actions">
         @if (authService.isLoggedIn()) {
           <span class="text-light me-3">
             <i class="bi bi-person-circle me-1"></i>

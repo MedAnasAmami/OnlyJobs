@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ModerationService, PendingProfil, PendingAnnonce } from '../../services/moderation.service';
 import { AnnonceService } from '../../services/annonce.service';
 import { ToastService } from '../../services/toast.service';
+import { Report } from '../../models/report.model';
 
 @Component({
   selector: 'app-admin-moderation',
@@ -30,6 +31,14 @@ import { ToastService } from '../../services/toast.service';
             <i class="bi bi-megaphone me-1"></i>
             Annonces en attente
             <span class="badge bg-warning text-dark ms-1">{{ pendingAnnonces().length }}</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="tab() === 'reports'" href="#" (click)="tab.set('reports'); $event.preventDefault()">
+            <i class="bi bi-flag-fill me-1"></i>
+            Signalements
+            <span class="badge bg-warning text-dark ms-1">{{ pendingReportsCount() }}</span>
           </a>
         </li>
       </ul>
@@ -111,6 +120,65 @@ import { ToastService } from '../../services/toast.service';
           </div>
         }
       }
+
+      @if (tab() === 'reports') {
+        @if (reports().length === 0) {
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-flag display-4"></i>
+            <p class="mt-2">Aucun signalement</p>
+          </div>
+        } @else {
+          <div class="row g-3">
+            @for (r of reports(); track r.id) {
+              <div class="col-md-6">
+                <div class="card shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <div class="fw-semibold">
+                          <i class="bi bi-flag-fill text-danger me-1"></i>
+                          {{ r.raison }}
+                        </div>
+                        <div class="text-muted small">
+                          Statut: <span class="badge bg-secondary">{{ r.statut }}</span>
+                        </div>
+                      </div>
+                      <div class="text-muted small">#{{ r.id }}</div>
+                    </div>
+
+                    <div class="small mb-2">
+                      Cible:
+                      @if (r.freelancer_id) {
+                        <span class="badge bg-primary">Freelancer #{{ r.freelancer_id }}</span>
+                      } @else if (r.client_id) {
+                        <span class="badge bg-info text-dark">Client #{{ r.client_id }}</span>
+                      } @else {
+                        <span class="badge bg-light text-dark">Inconnue</span>
+                      }
+                      <span class="ms-2 text-muted">Reporter: #{{ r.reporter_id }}</span>
+                    </div>
+
+                    @if (r.description) {
+                      <div class="border rounded p-2 small mb-2">{{ r.description }}</div>
+                    } @else {
+                      <div class="text-muted small mb-2">(Pas de description)</div>
+                    }
+
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-success btn-sm" (click)="markReportTreated(r)" [disabled]="r.statut === 'traite'">
+                        <i class="bi bi-check-lg me-1"></i>Traite
+                      </button>
+                      <button class="btn btn-danger btn-sm" (click)="rejectReport(r)" [disabled]="r.statut === 'rejete'">
+                        <i class="bi bi-x-lg me-1"></i>Rejeter
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
     </div>
   `,
   styles: [`
@@ -119,9 +187,10 @@ import { ToastService } from '../../services/toast.service';
   `]
 })
 export class AdminModerationComponent implements OnInit {
-  tab = signal<'profils' | 'annonces'>('profils');
+  tab = signal<'profils' | 'annonces' | 'reports'>('profils');
   pendingProfils = signal<PendingProfil[]>([]);
   pendingAnnonces = signal<PendingAnnonce[]>([]);
+  reports = signal<Report[]>([]);
 
   constructor(
     private moderationService: ModerationService,
@@ -133,6 +202,10 @@ export class AdminModerationComponent implements OnInit {
     this.refresh();
   }
 
+  pendingReportsCount(): number {
+    return this.reports().filter(r => r.statut === 'en_attente').length;
+  }
+
   refresh(): void {
     this.moderationService.getPendingProfils().subscribe({
       next: (data) => this.pendingProfils.set(data),
@@ -141,6 +214,11 @@ export class AdminModerationComponent implements OnInit {
     this.moderationService.getPendingAnnonces().subscribe({
       next: (data) => this.pendingAnnonces.set(data),
       error: () => this.toastService.error('Erreur chargement annonces')
+    });
+
+    this.moderationService.getReports().subscribe({
+      next: (data) => this.reports.set(data),
+      error: () => this.toastService.error('Erreur chargement signalements')
     });
   }
 
@@ -173,6 +251,20 @@ export class AdminModerationComponent implements OnInit {
     this.moderationService.setAnnonceStatus(a.idAnnonce, 'rejete').subscribe({
       next: () => { this.toastService.success('Annonce rejetee'); this.refresh(); },
       error: () => this.toastService.error('Erreur')
+    });
+  }
+
+  markReportTreated(r: Report): void {
+    this.moderationService.setReportStatus(r.id, 'traite').subscribe({
+      next: () => { this.toastService.success('Signalement traite'); this.refresh(); },
+      error: (err) => this.toastService.error(err?.error?.detail || 'Erreur')
+    });
+  }
+
+  rejectReport(r: Report): void {
+    this.moderationService.setReportStatus(r.id, 'rejete').subscribe({
+      next: () => { this.toastService.success('Signalement rejete'); this.refresh(); },
+      error: (err) => this.toastService.error(err?.error?.detail || 'Erreur')
     });
   }
 }

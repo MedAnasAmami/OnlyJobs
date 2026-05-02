@@ -38,10 +38,25 @@ class Annonce(SQLModel, table=True):
     idAnnonce: Optional[int] = Field(default=None, primary_key=True)
     titre: str = Field(sa_column=Column(String(255)))
     description: str = Field(sa_column=Column(String(500)))
+    categorie: str = Field(default="General", sa_column=Column(String(100)))
+    delai: int = Field(default=7)
     image: Optional[str] = Field(default=None, sa_column=Column(String(500)))  # URL ou chemin de l'image
     dateCreation: Optional[str] = Field(default=None, sa_column=Column(String(50)))
     statut: str = Field(default="en_attente", sa_column=Column(String(50)))
     freelancer_id: int = Field(foreign_key="freelancer.id")
+
+# ============= TABLE SERVICE =============
+class Service(SQLModel, table=True):
+    idService: Optional[int] = Field(default=None, primary_key=True)
+    titre: str = Field(sa_column=Column(String(255)))
+    description: Optional[str] = Field(default=None, sa_column=Column(String(500)))
+    delai: int = Field()
+    categorie: str = Field(sa_column=Column(String(100)))
+    statut: str = Field(default="actif", sa_column=Column(String(50)))
+    freelancer_id: int = Field(foreign_key="freelancer.id")
+    annonce_id: Optional[int] = Field(default=None, foreign_key="annonce.idAnnonce")
+    client_id: Optional[int] = Field(default=None, foreign_key="client.id")
+    date_choix: Optional[str] = Field(default=None, sa_column=Column(String(50)))
 
 # ============= TABLE RATING =============
 class Rating(SQLModel, table=True):
@@ -59,5 +74,7 @@ class Report(SQLModel, table=True):
     description: Optional[str] = Field(default=None, sa_column=Column(String(500)))
     date_creation: Optional[str] = Field(default=None, sa_column=Column(String(50)))
     statut: str = Field(default="en_attente", sa_column=Column(String(50)))  # en_attente, traite, rejete
-    freelancer_id: int = Field(foreign_key="freelancer.id")
+    # A report can target either a freelancer OR a client.
+    freelancer_id: Optional[int] = Field(default=None, foreign_key="freelancer.id")
+    client_id: Optional[int] = Field(default=None, foreign_key="client.id")
     reporter_id: int = Field(foreign_key="utilisateur.id")

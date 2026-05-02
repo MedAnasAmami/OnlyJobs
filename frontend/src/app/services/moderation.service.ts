@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Report } from '../models/report.model';
 
 export interface PendingProfil {
   idProfil: number;
@@ -48,5 +49,14 @@ export class ModerationService {
 
   setAnnonceStatus(annonceId: number, statut: 'accepte' | 'rejete' | 'en_attente'): Observable<any> {
     return this.http.put(`${this.apiUrl}/admin/annonces/${annonceId}/status`, { statut });
+  }
+
+  // Reports
+  getReports(): Observable<Report[]> {
+    return this.http.get<Report[]>(`${this.apiUrl}/reports`);
+  }
+
+  setReportStatus(reportId: number, statut: 'en_attente' | 'traite' | 'rejete'): Observable<Report> {
+    return this.http.put<Report>(`${this.apiUrl}/reports/${reportId}/status`, { statut });
   }
 }

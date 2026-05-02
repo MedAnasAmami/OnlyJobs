@@ -17,6 +17,7 @@ declare var bootstrap: any;
 })
 export class ReportModalComponent implements OnChanges {
   freelancerId = input<number | null>(null);
+  clientId = input<number | null>(null);
   reportSubmitted = output<void>();
 
   selectedReason = signal<ReportReason | ''>('');
@@ -40,10 +41,18 @@ export class ReportModalComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['freelancerId'] && this.freelancerId()) {
+    const hasFreelancerTarget = !!this.freelancerId();
+    const hasClientTarget = !!this.clientId();
+
+    // Open modal when either target is set
+    if ((changes['freelancerId'] || changes['clientId']) && (hasFreelancerTarget || hasClientTarget)) {
       this.resetForm();
       this.openModal();
     }
+  }
+
+  get targetTitle(): string {
+    return this.clientId() ? 'Client' : 'Freelancer';
   }
 
   private resetForm(): void {
@@ -68,8 +77,9 @@ export class ReportModalComponent implements OnChanges {
 
     const user = this.authService.currentUser();
     const freelancerId = this.freelancerId();
+    const clientId = this.clientId();
 
-    if (!user || !freelancerId) {
+    if (!user || (!freelancerId && !clientId) || (freelancerId && clientId)) {
       this.toastService.error('Erreur: utilisateur non connecte');
       return;
     }
@@ -80,7 +90,8 @@ export class ReportModalComponent implements OnChanges {
       await this.freelancerService.createReport({
         raison: reason,
         description: this.description() || undefined,
-        freelancer_id: freelancerId,
+        freelancer_id: freelancerId || undefined,
+        client_id: clientId || undefined,
         reporter_id: user.id
       }).toPromise();
 
